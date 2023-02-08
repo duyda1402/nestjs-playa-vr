@@ -1,11 +1,24 @@
 import { Module } from '@nestjs/common';
-
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from './shared/configuaration/config.module';
-import { VersionModule } from './shared/version/version.module';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
-  imports: [AuthModule, ConfigModule, VersionModule],
+  imports: [
+    AuthModule,
+    SharedModule,
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'reader.staging.db.vrporn.com',
+      port: 3306,
+      username: 'playaapi',
+      password: 'R73eGnbwEh42ah9gFV',
+      database: 'vrporn_staging',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      autoLoadEntities: true,
+      synchronize: false,
+    }),
+  ],
   controllers: [],
   providers: [],
 })
