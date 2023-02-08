@@ -21,4 +21,11 @@ export class AuthController {
     const token = await this.authService.refreshToken(req.headers.authorization.split(' ')[1]);
     return { status: { code: 1, message: 'ok' }, data: token };
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('sign-out')
+  async logout(): Promise<Rsp<any>> {
+    // xử lý logout logic tại đây, ví dụ như xóa access token trong database.
+    return { status: { code: 1, message: 'ok' } };
+  }
 }
