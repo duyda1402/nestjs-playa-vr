@@ -21,4 +21,7 @@ export class UserService {
 
     return data;
   }
+  async updateUser(id: number, newData: Partial<User>): Promise<any> {
+    return await this.userRepository.update(id, newData);
+  }
 }
