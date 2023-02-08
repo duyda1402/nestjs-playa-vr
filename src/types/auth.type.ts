@@ -7,11 +7,3 @@ export interface UserProfile {
   display_name: string;
   role: string;
 }
-
-export interface Configuration {
-  site_name: string;
-  site_logo: string;
-  actors: boolean;
-  categories: boolean;
-  studios: boolean;
-}

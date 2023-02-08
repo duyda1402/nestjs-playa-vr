@@ -1,4 +1,5 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Rsp } from 'src/types/response.type';
@@ -12,5 +13,12 @@ export class AuthController {
   async signInPassword(@Body() loginDto: LoginDto): Promise<Rsp<Token>> {
     const result = await this.authService.login(loginDto);
     return result;
+  }
+
+  @Post('/refresh')
+  @UseGuards(AuthGuard('jwt'))
+  async refreshToken(@Request() req: any): Promise<Rsp<Token>> {
+    const token = await this.authService.refreshToken(req.headers.authorization.split(' ')[1]);
+    return { status: { code: 1, message: 'ok' }, data: token };
   }
 }

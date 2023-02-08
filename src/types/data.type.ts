@@ -1,10 +1,12 @@
-enum TypeVideoDetails {
+import { Url } from './response.type';
+
+enum TypeVideo {
   trailer,
   full,
 }
 
 export interface VideoListDetails {
-  type: TypeVideoDetails;
+  type: TypeVideo;
   duration_seconds: number;
 }
 
@@ -32,7 +34,7 @@ export interface VideoViewActor {
 }
 export interface TimelineAtlas {
   version: number;
-  url: string;
+  url: Url;
 }
 export interface TimelineMarker {
   time?: number;
@@ -44,7 +46,7 @@ export interface TimelineMarker {
 export interface VideoLink {
   is_stream?: boolean;
   is_download?: boolean;
-  url?: string;
+  url?: Url;
   unavailable_reason?: string;
   projection?: string;
   stereo?: string;
@@ -52,7 +54,7 @@ export interface VideoLink {
   quality_order?: number;
 }
 export interface VideoViewDetails {
-  type: TypeVideoDetails;
+  type: TypeVideo;
   duration_seconds: number;
   timeline_atlas: TimelineAtlas;
   timeline_markers: TimelineMarker[];
@@ -61,13 +63,13 @@ export interface VideoViewDetails {
 export interface ActorListView {
   id: string;
   title: string;
-  preview: string;
+  preview: Url;
 }
 
 export interface ActorView {
   id: string;
   title: string;
-  preview: string;
+  preview: Url;
   studios: ActorViewStudio[];
   properties: ActorViewProperty[];
   aliases: string[];
@@ -86,18 +88,18 @@ export interface ActorViewProperty {
 export interface StudioListView {
   id: string;
   title: string;
-  preview: string;
+  preview: Url;
 }
 
 export interface StudioView {
   id: string;
   title: string;
-  preview: string;
+  preview: Url;
   description: string;
 }
 
 export interface CategoryListView {
   id: string;
   title: string;
-  preview: string;
+  preview: Url;
 }
