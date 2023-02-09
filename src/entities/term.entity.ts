@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, OneToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { TermMetaEntity } from './term_meta.entity';
-import { TermTexonomyEntity } from './term_texonomy.entity';
+// import { TermTaxonomyEntity } from './term_taxonomy.entity';
 import { TopPornstarsEntity } from './top_pornstar.entity';
 
 @Entity({ name: 'wp_rkr3j35p5r_terms' })
@@ -22,8 +22,8 @@ export class TermEntity {
   termMetas: TermMetaEntity[];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @OneToOne((_T) => TermTexonomyEntity, (term_texonomy) => term_texonomy.term_id)
-  term_texonomy: TermTexonomyEntity;
+  // @OneToOne((_T) => TermTaxonomyEntity, (term_texonomy) => term_texonomy.term_id)
+  // term_texonomy: TermTaxonomyEntity;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_T) => TopPornstarsEntity, (top) => top.termId)
