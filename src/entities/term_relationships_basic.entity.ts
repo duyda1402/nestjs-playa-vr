@@ -1,8 +1,11 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { TermTexonomyEntity } from './term_texonomy.entity';
 
 @Entity({ name: 'wp_rkr3j35p5r_term_relationships_basic' })
 export class TermRelationShipsBasicEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
   @Column({ name: 'object_id' })
   objectId: number;
 

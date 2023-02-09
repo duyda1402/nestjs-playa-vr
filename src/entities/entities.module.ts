@@ -8,6 +8,7 @@ import { TermTexonomyEntity } from './term_texonomy.entity';
 import { PostEntity } from './post.entity';
 import { PostMetaEntity } from './post_meta.entity';
 import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity';
+import { TopPornstarsEntity } from './top_pornstar.entity';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity'
       TermMetaEntity,
       TermTexonomyEntity,
       TermRelationShipsBasicEntity,
+      TopPornstarsEntity,
     ]),
   ],
   providers: [],
