@@ -10,7 +10,7 @@ export class UserMetaEntity {
   userLogin: string;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @ManyToOne((type) => UserEntity, (user) => user.userMetas)
+  @ManyToOne((_T) => UserEntity, (user) => user.userMetas)
   @JoinColumn()
   user_id: UserEntity;
 

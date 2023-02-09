@@ -5,9 +5,23 @@ import { UserMetaEntity } from './user_meta.entity';
 import { TermMetaEntity } from './term_meta.entity';
 import { TermEntity } from './term.entity';
 import { TermTexonomyEntity } from './term_texonomy.entity';
+import { PostEntity } from './post.entity';
+import { PostMetaEntity } from './post_meta.entity';
+import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, UserMetaEntity, TermEntity, TermMetaEntity, TermTexonomyEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserEntity,
+      UserMetaEntity,
+      PostEntity,
+      PostMetaEntity,
+      TermEntity,
+      TermMetaEntity,
+      TermTexonomyEntity,
+      TermRelationShipsBasicEntity,
+    ]),
+  ],
   providers: [],
   controllers: [],
 })
