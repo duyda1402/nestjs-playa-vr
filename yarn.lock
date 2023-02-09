@@ -1245,6 +1245,11 @@
   resolved "https://registry.yarnpkg.com/@types/validator/-/validator-13.7.12.tgz#a285379b432cc8d103b69d223cbb159a253cf2f7"
   integrity sha512-YVtyAPqpefU+Mm/qqnOANW6IkqKpCSrarcyV269C8MA8Ux0dbkEuQwM/4CjL47kVEM2LgBef/ETfkH+c6+moFA==
 
+"@types/wordpress-hash-node@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/wordpress-hash-node/-/wordpress-hash-node-1.0.0.tgz#a1f2cbca6d19d51d3f6b46ceb51114c1c023747c"
+  integrity sha512-ZJx/OdsHI+4nbFgjuAoB4hpoT+XhmdF/xtl2H0/Y27MLWB83hNACam27oxk43pMKc9gGteeO61SinX1D8Qnw7w==
+
 "@types/yargs-parser@*":
   version "21.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.0.tgz#0c60e537fa790f5f9472ed2776c2b71ec117351b"
@@ -6691,6 +6696,11 @@ word-wrap@^1.2.3, word-wrap@~1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
+
+wordpress-hash-node@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/wordpress-hash-node/-/wordpress-hash-node-1.0.0.tgz#f409fb68e6201a52a171fb626144bd3a6ed2f888"
+  integrity sha512-gU1DDhHBKhrX5dlKS0CcZJWPfx1npoJTD10tTf0QtYnS1ETjrAn9CLu721LqTdLgPyxMvxCbdseeaLzAxc0XtA==
 
 wrap-ansi@^7.0.0:
   version "7.0.0"

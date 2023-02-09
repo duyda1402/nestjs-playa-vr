@@ -3,12 +3,13 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 @Entity({ name: 'wp_rkr3j35p5r_users' })
 export class UserEntity {
   @PrimaryGeneratedColumn({ name: 'ID' })
-  guid: number;
+  id: number;
 
   @Column({ name: 'user_login' })
   userLogin: string;
 
-  @Column({ select: false, name: 'user_pass' })
+  // @Column({ select: false, name: 'user_pass' })
+  @Column({ name: 'user_pass' })
   password: string;
 
   @Column({ name: 'user_email' })
