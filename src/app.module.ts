@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { SharedModule } from './shared/shared.module';
+import { EntitiesModule } from './entities/entities.module';
 
 @Module({
   imports: [
     AuthModule,
     SharedModule,
+    EntitiesModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'reader.staging.db.vrporn.com',

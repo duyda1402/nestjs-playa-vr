@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOneOptions } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { UserEntity } from '../../entities/user.entity';
+import { verify } from 'jsonwebtoken';
+import { UserProfile } from 'src/types/auth.type';
 
 @Injectable()
 export class UserService {
@@ -9,6 +11,14 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>
   ) {}
+  async getUserProfile(accessToken: string): Promise<UserProfile> {
+    const payload = verify(accessToken, 'secretKey');
+    const user = await this.findUserByUsername({ userLogin: payload['username'] });
+    return {
+      display_name: user.displayName,
+      role: 'premium',
+    };
+  }
 
   async findAll(): Promise<UserEntity[]> {
     const pageNumber = 1; //Xét trên trang số 1

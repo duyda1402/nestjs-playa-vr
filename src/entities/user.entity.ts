@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { UserMetaEntity } from './user_meta.entity';
 
 @Entity({ name: 'wp_rkr3j35p5r_users' })
 export class UserEntity {
@@ -32,4 +33,8 @@ export class UserEntity {
 
   @Column({ name: 'display_name' })
   displayName: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @OneToMany((type) => UserMetaEntity, (userMeta) => userMeta.user_id)
+  userMetas: UserMetaEntity[];
 }

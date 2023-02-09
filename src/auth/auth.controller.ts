@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Rsp } from 'src/types/response.type';
 import { Token } from 'src/types/auth.type';
+import { Request } from 'express';
 
 @Controller('/auth')
 export class AuthController {
@@ -17,7 +18,7 @@ export class AuthController {
 
   @Post('/refresh')
   @UseGuards(AuthGuard('jwt'))
-  async refreshToken(@Request() req: any): Promise<Rsp<Token>> {
+  async refreshToken(@Req() req: Request): Promise<Rsp<Token>> {
     const token = await this.authService.refreshToken(req.headers.authorization.split(' ')[1]);
     return { status: { code: 1, message: 'ok' }, data: token };
   }
