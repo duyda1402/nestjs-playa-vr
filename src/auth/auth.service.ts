@@ -3,7 +3,6 @@ import { LoginDto } from './dto/login.dto';
 import { Token } from 'src/types/auth.type';
 import { Rsp } from 'src/types/response.type';
 import { JwtService } from '@nestjs/jwt';
-import { verify } from 'jsonwebtoken';
 import { UserService } from 'src/shared/user/user.service';
 import { AuthFailedException, UnauthorizedException } from 'src/exceptions/auth.exception';
 import * as hasher from 'wordpress-hash-node';
@@ -29,24 +28,21 @@ export class AuthService {
     }
     // Tạo token và trả về cho controller
     const payload = { username: user.userLogin, sub: user.id };
-    const token = this.generateToken(payload);
+    const token = await this.generateToken(payload);
     return { status: { code: 1, message: 'Login successful' }, data: token };
   }
 
-  async refreshToken(refreshToken: string): Promise<Token> {
-    try {
-      const payload = verify(refreshToken, 'secretKey');
-      const token = this.generateToken({ sub: payload.sub, username: payload['username'] });
-      // xử lý logic tại đây, ví dụ như lưu token mới trong database.
-      return token;
-    } catch (error) {
-      throw new UnauthorizedException();
-    }
+  async refreshToken(id: number): Promise<Token> {
+    const user = await this.userService.findUserByUsername({ id: id });
+    if (!user) throw new UnauthorizedException();
+    const token = this.generateToken({ sub: user.id, username: user.userLogin });
+    // xử lý logic tại đây, ví dụ như lưu token mới trong database.
+    return token;
   }
 
-  async validateUser(payload: any) {
+  async validateUser(id: number) {
     //xử lý logic xác thực người dùng tại đây
-    const user = await this.userService.findUserByUsername({ userLogin: payload?.username, id: payload?.sub });
+    const user = await this.userService.findUserByUsername({ id: id });
     return user;
   }
 
@@ -55,9 +51,9 @@ export class AuthService {
     return checked;
   }
 
-  private generateToken(payload: any): Token {
-    const access_token = this.jwtService.sign(payload);
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+  private async generateToken(payload: any): Promise<Token> {
+    const access_token = await this.jwtService.signAsync(payload, { secret: 'at-secret', expiresIn: '15m' });
+    const refresh_token = await this.jwtService.signAsync(payload, { secret: 'rt-secret', expiresIn: '7d' });
     return { access_token, refresh_token };
   }
 }

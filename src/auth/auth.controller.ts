@@ -1,10 +1,11 @@
 import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Rsp } from 'src/types/response.type';
 import { Token } from 'src/types/auth.type';
 import { Request } from 'express';
+import { JwtAuthGuard, RefreshAuthGuard } from './auth.guard';
+import { UnauthorizedException } from 'src/exceptions/auth.exception';
 
 @Controller('/auth')
 export class AuthController {
@@ -16,17 +17,23 @@ export class AuthController {
     return result;
   }
 
-  @Post('/refresh')
-  @UseGuards(AuthGuard('jwt'))
+  @Get('/refresh')
+  @UseGuards(RefreshAuthGuard)
   async refreshToken(@Req() req: Request): Promise<Rsp<Token>> {
-    const token = await this.authService.refreshToken(req.headers.authorization.split(' ')[1]);
-    return { status: { code: 1, message: 'ok' }, data: token };
+    const user = req.user;
+    console.log(user);
+    const newAccessToken = await this.authService.refreshToken(user['sub']);
+    return { status: { code: 1, message: 'ok' }, data: newAccessToken };
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('sign-out')
+  @UseGuards(JwtAuthGuard)
   async logout(): Promise<Rsp<any>> {
-    // xử lý logout logic tại đây, ví dụ như xóa access token trong database.
-    return { status: { code: 1, message: 'ok' } };
+    try {
+      // const newAccessToken = await this.authService.refreshToken(req.headers.authorization.split(' ')[1]);
+      return { status: { code: 1, message: 'ok' } };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
