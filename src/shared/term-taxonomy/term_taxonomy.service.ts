@@ -12,19 +12,20 @@ export class TermTaxonomyService {
   ) {}
 
   async getTermTaxonomyList(payload: {
-    pageIndex?: number;
-    pageSize?: number;
+    page?: number;
+    perPage?: number;
     where?: any;
     order?: any;
   }): Promise<TermTaxonomyEntity[]> {
-    const index = payload.pageIndex || 1;
-    const limit = payload.pageSize || 20;
     const order = payload.order || { taxonomy: 'ASC' };
     return await this.termTexonomyRepository.find({
-      skip: (index - 1) * 10,
-      take: limit, // limit to 20 records
+      skip: (payload.page - 1) * payload.perPage,
+      take: payload.perPage, // limit to 20 records
       where: payload.where, // filter
       order: order, //sort
+      relations: {
+        termId: true,
+      },
     });
   }
 }

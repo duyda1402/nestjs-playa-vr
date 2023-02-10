@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 
 // import { TermEntity } from './term.entity';
 import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity';
+import { TermEntity } from './term.entity';
 
 @Entity({ name: 'wp_rkr3j35p5r_term_taxonomy' })
 export class TermTaxonomyEntity {
@@ -21,9 +22,9 @@ export class TermTaxonomyEntity {
   count: number;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @OneToOne((_T) => TermEntity)
-  @Column({ name: 'term_id' })
-  termId: number;
+  @ManyToOne((_T) => TermEntity, (term) => term.taxonomys)
+  @JoinColumn({ name: 'term_id' })
+  termId: TermEntity;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_T) => TermRelationShipsBasicEntity, (termRB) => termRB.termTaxonomyId)

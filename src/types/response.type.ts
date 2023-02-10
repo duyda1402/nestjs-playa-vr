@@ -6,6 +6,8 @@ export interface Status {
 export interface Rsp<T> {
   status: Status;
   data?: T;
+  page?: number;
+  perPage?: number;
 }
 
 export type SemVersion = string;

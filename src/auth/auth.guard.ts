@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('accessToken') implements CanActivate {
+export class JwtAuthGuard extends AuthGuard('access') implements CanActivate {
   constructor(private readonly reflector: Reflector) {
     super();
   }
