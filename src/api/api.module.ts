@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { StudiosListViewModule } from './studio-list-view/studio_list_view.module';
+import { StudiosListViewModule } from './studios/studios.module';
 
 @Module({
   imports: [StudiosListViewModule],

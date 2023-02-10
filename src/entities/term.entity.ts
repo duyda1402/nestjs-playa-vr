@@ -19,7 +19,7 @@ export class TermEntity {
   termGroup: number;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @OneToMany((_T) => TermMetaEntity, (tern_meta) => tern_meta.term_id)
+  @OneToMany((_T) => TermMetaEntity, (meta) => meta.term)
   termMetas: TermMetaEntity[];
 
   //eslint-disable-next-line @typescript-eslint/no-unused-vars

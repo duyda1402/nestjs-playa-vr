@@ -10,9 +10,9 @@ export class TermService {
     private readonly termRepository: Repository<TermEntity>
   ) {}
 
-  async getTermById(termId: number): Promise<TermEntity> {
+  async getTermBySlug(slug: string): Promise<TermEntity> {
     const options: FindOneOptions<TermEntity> = {
-      where: { id: termId },
+      where: { slug },
     };
     const term = await this.termRepository.findOne(options);
     return term;

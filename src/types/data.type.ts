@@ -95,7 +95,7 @@ export interface StudioView {
   id: string;
   title: string;
   preview: Url;
-  description: string;
+  description: string | Buffer;
 }
 
 export interface CategoryListView {

@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { TermTaxonomyService } from 'src/shared/term-taxonomy/term_taxonomy.service';
-import { StudioListView } from 'src/types/data.type';
+import { TermService } from 'src/shared/term/term.service';
+import { StudioListView, StudioView } from 'src/types/data.type';
 
 @Injectable()
-export class StudioListViewService {
-  constructor(private readonly termTaxonomyService: TermTaxonomyService) {}
+export class StudiosService {
+  constructor(
+    private readonly termService: TermService,
+
+    private readonly termTaxonomyService: TermTaxonomyService
+  ) {}
 
   async getStudioList(input: { page?: number; perPage?: number; order?: any; where?: any }): Promise<StudioListView[]> {
     const order = { ...input.order } || { count: 'DESC' };
@@ -21,5 +26,18 @@ export class StudioListViewService {
       preview: 'https://placekitten.com/200/300',
     }));
     return result;
+  }
+
+  async getStudioDetail(id: string): Promise<StudioView | null> {
+    const term = await this.termService.getTermBySlug(id);
+    const taxonomy = await this.termTaxonomyService.getgetTaxonomyByTermAndLabel(term.id, 'studio');
+    if (!taxonomy) null;
+
+    return {
+      id: term.slug,
+      title: term.name,
+      preview: 'https://placekitten.com/200/300',
+      description: taxonomy.description,
+    };
   }
 }
