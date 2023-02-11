@@ -1,9 +1,8 @@
 import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { Rsp } from 'src/types/response.type';
-import { Token, UserProfile } from 'src/types/auth.type';
-import { Request } from 'express';
+import { IFRsp, IFToken, IFUserProfile } from 'src/types';
 import { JwtAuthGuard, RefreshAuthGuard } from './auth.guard';
 import { UnauthorizedException } from 'src/exceptions/auth.exception';
 import { UserService } from 'src/shared/user/user.service';
@@ -13,14 +12,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
 
   @Post('/auth/sign-in-password')
-  async signInPassword(@Body() loginDto: LoginDto): Promise<Rsp<Token>> {
+  async signInPassword(@Body() loginDto: LoginDto): Promise<IFRsp<IFToken>> {
     const result = await this.authService.login(loginDto);
     return result;
   }
 
   @Get('/auth/refresh')
   @UseGuards(RefreshAuthGuard)
-  async refreshToken(@Req() req: Request): Promise<Rsp<Token>> {
+  async refreshToken(@Req() req: Request): Promise<IFRsp<IFToken>> {
     const user = req.user;
     const newAccessToken = await this.authService.refreshToken(user['sub']);
     return { status: { code: 1, message: 'ok' }, data: newAccessToken };
@@ -28,7 +27,7 @@ export class AuthController {
 
   @Get('/auth/sign-out')
   @UseGuards(JwtAuthGuard)
-  async logout(): Promise<Rsp<any>> {
+  async logout(): Promise<IFRsp<any>> {
     try {
       return { status: { code: 1, message: 'ok' } };
     } catch (error) {
@@ -38,7 +37,7 @@ export class AuthController {
 
   @Get('user/profile')
   @UseGuards(JwtAuthGuard)
-  async getUserProfile(@Req() req: Request): Promise<Rsp<UserProfile>> {
+  async getUserProfile(@Req() req: Request): Promise<IFRsp<IFUserProfile>> {
     const user = req.user;
     const result = await this.userService.getUserProfile(user['sub']);
     return { status: { code: 1, message: 'ok' }, data: result };

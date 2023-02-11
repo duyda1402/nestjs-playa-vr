@@ -3,20 +3,26 @@ export interface Status {
   message?: string;
 }
 
-export interface Rsp<T> {
+export interface IFRsp<Type> {
   status: Status;
-  data?: T;
-  page?: number;
-  perPage?: number;
+  data?: Type;
 }
 
-export type SemVersion = string;
+export type IFSemVersion = string;
 export type Url = string;
 
-export interface Configuration {
+export interface IFConfig {
   site_name: string;
   site_logo: Url;
   actors: boolean;
   categories: boolean;
   studios: boolean;
+}
+
+export interface IFPage<Type> {
+  page_index: number;
+  item_count: number;
+  page_total: number;
+  item_total: number;
+  content: Type;
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
-import { Token } from 'src/types/auth.type';
-import { Rsp } from 'src/types/response.type';
+import { IFToken, IFRsp } from 'src/types';
+
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/shared/user/user.service';
 import { AuthFailedException, UnauthorizedException } from 'src/exceptions/auth.exception';
@@ -10,7 +10,7 @@ import * as hasher from 'wordpress-hash-node';
 export class AuthService {
   constructor(private readonly jwtService: JwtService, private readonly userService: UserService) {}
 
-  async login(loginDto: LoginDto): Promise<Rsp<Token>> {
+  async login(loginDto: LoginDto): Promise<IFRsp<IFToken>> {
     const { username, password } = loginDto;
     // Kiểm tra tính hợp lệ của thông tin đăng nhập
     if (!username || !password) {
@@ -32,7 +32,7 @@ export class AuthService {
     return { status: { code: 1, message: 'Login successful' }, data: token };
   }
 
-  async refreshToken(id: number): Promise<Token> {
+  async refreshToken(id: number): Promise<IFToken> {
     const user = await this.userService.findUserByUsername({ id: id });
     if (!user) throw new UnauthorizedException();
     const token = this.generateToken({ sub: user.id, username: user.userLogin });
@@ -51,7 +51,7 @@ export class AuthService {
     return checked;
   }
 
-  private async generateToken(payload: any): Promise<Token> {
+  private async generateToken(payload: any): Promise<IFToken> {
     const access_token = await this.jwtService.signAsync(payload, { secret: 'at-secret', expiresIn: '15m' });
     const refresh_token = await this.jwtService.signAsync(payload, { secret: 'rt-secret', expiresIn: '7d' });
     return { access_token, refresh_token };

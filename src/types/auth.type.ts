@@ -1,9 +1,9 @@
-export interface Token {
+export interface IFToken {
   access_token: string;
   refresh_token: string;
 }
 
-export interface UserProfile {
+export interface IFUserProfile {
   display_name: string;
   role: string;
 }

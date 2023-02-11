@@ -5,45 +5,45 @@ enum TypeVideo {
   full,
 }
 
-export interface VideoListDetails {
+export interface IFVideoListDetails {
   type: TypeVideo;
   duration_seconds: number;
 }
 
-export interface VideoListView {
+export interface IFVideoListView {
   id: string;
   title: string;
   subtitle: string;
   preview_image: string;
   release_date: string;
-  details: VideoListDetails;
+  details: IFVideoListDetails;
 }
 
-export interface VideoViewStudio {
+export interface IFVideoViewStudio {
   id: string;
   title: string;
 }
 
-export interface VideoViewCategory {
+export interface IFVideoViewCategory {
   id: string;
   title: string;
 }
-export interface VideoViewActor {
+export interface IFVideoViewActor {
   id: string;
   title: string;
 }
-export interface TimelineAtlas {
+export interface IFTimelineAtlas {
   version: number;
   url: Url;
 }
-export interface TimelineMarker {
+export interface IFTimelineMarker {
   time?: number;
   title?: string;
   tilt?: number;
   zoom?: number;
   height?: number;
 }
-export interface VideoLink {
+export interface IFVideoLink {
   is_stream?: boolean;
   is_download?: boolean;
   url?: Url;
@@ -53,52 +53,52 @@ export interface VideoLink {
   quality_name?: string;
   quality_order?: number;
 }
-export interface VideoViewDetails {
+export interface IFVideoViewDetails {
   type: TypeVideo;
   duration_seconds: number;
-  timeline_atlas: TimelineAtlas;
-  timeline_markers: TimelineMarker[];
-  links: VideoLink[];
+  timeline_atlas: IFTimelineAtlas;
+  timeline_markers: IFTimelineMarker[];
+  links: IFVideoLink[];
 }
-export interface ActorListView {
+export interface IFActorListView {
   id: string;
   title: string;
   preview: Url;
 }
 
-export interface ActorView {
+export interface IFActorView {
   id: string;
   title: string;
   preview: Url;
-  studios: ActorViewStudio[];
-  properties: ActorViewProperty[];
+  studios: IFActorViewStudio[];
+  properties: IFActorViewProperty[];
   aliases: string[];
 }
 
-export interface ActorViewStudio {
+export interface IFActorViewStudio {
   id: string;
   title: string;
 }
 
-export interface ActorViewProperty {
+export interface IFActorViewProperty {
   name: string;
   value: string;
 }
 
-export interface StudioListView {
+export interface IFStudioListView {
   id: string;
   title: string;
   preview: Url;
 }
 
-export interface StudioView {
+export interface IFStudioView {
   id: string;
   title: string;
   preview: Url;
   description: string | Buffer;
 }
 
-export interface CategoryListView {
+export interface IFCategoryListView {
   id: string;
   title: string;
   preview: Url;

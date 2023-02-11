@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOneOptions } from 'typeorm';
 import { UserEntity } from '../../entities/user.entity';
-import { UserProfile } from 'src/types/auth.type';
+import { IFUserProfile } from 'src/types';
 
 @Injectable()
 export class UserService {
@@ -10,7 +10,7 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>
   ) {}
-  async getUserProfile(id: number): Promise<UserProfile> {
+  async getUserProfile(id: number): Promise<IFUserProfile> {
     const user = await this.findUserByUsername({ id });
     return {
       display_name: user.displayName,

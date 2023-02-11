@@ -24,8 +24,6 @@ import { TopPornstarsEntity } from './top_pornstar.entity';
       TopPornstarsEntity,
     ]),
   ],
-  providers: [],
-  controllers: [],
   exports: [
     TypeOrmModule.forFeature([
       UserEntity,

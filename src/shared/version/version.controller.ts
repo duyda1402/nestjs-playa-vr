@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { SemVersion, Rsp } from 'src/types/response.type';
+import { IFSemVersion, IFRsp } from 'src/types';
 
 import { VersionService } from './version.service';
 
@@ -9,7 +9,7 @@ export class VersionController {
   constructor(private readonly versionService: VersionService) {}
 
   @Get('')
-  async getVersion(): Promise<Rsp<SemVersion>> {
+  async getVersion(): Promise<IFRsp<IFSemVersion>> {
     const result = await this.versionService.getVersion();
     return result;
   }

@@ -4,14 +4,14 @@ import { AuthModule } from './auth/auth.module';
 import { SharedModule } from './shared/shared.module';
 import { EntitiesModule } from './entities/entities.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ApiModule } from './api/api.module';
+import { RepositoryModule } from './repository/repository.module';
 
 @Module({
   imports: [
     AuthModule,
     SharedModule,
     EntitiesModule,
-    ApiModule,
+    RepositoryModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

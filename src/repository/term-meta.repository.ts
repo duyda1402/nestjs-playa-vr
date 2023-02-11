@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { FindOneOptions, Repository } from 'typeorm';
-import { TermEntity } from './../../entities/term.entity';
 
 @Injectable()
-export class TermMetaService {
+export class TermMetaRepository {
   constructor(
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>

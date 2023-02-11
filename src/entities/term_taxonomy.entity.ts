@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
 // import { TermEntity } from './term.entity';
 import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity';
@@ -22,9 +22,13 @@ export class TermTaxonomyEntity {
   count: number;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @ManyToOne((_T) => TermEntity, (term) => term.taxonomys)
+  // @ManyToOne((_T) => TermEntity, (term) => term.taxonomys)
+
+  // termId: TermEntity;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @OneToOne((_T) => TermEntity, (term) => term.taxonomy)
   @JoinColumn({ name: 'term_id' })
-  termId: TermEntity;
+  term: TermEntity;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_T) => TermRelationShipsBasicEntity, (termRB) => termRB.termTaxonomyId)
