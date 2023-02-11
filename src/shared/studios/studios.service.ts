@@ -16,13 +16,7 @@ export class StudiosService {
     direction?: string;
     title?: string;
   }): Promise<IFPage<IFStudioListView[]>> {
-    const { itemTotal, data } = await this.termRepository.getTermsStudio({
-      page: query.page,
-      perPage: query.perPage,
-      title: query.title,
-      order: query.order,
-      direction: query.direction,
-    });
+    const { itemTotal, data } = await this.termRepository.getTermsStudio(query);
     const content = data.map((item) => ({
       id: item.slug,
       title: item.name,

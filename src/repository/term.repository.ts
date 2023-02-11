@@ -28,12 +28,11 @@ export class TermRepository {
   }): Promise<{ itemTotal: number; data: TermEntity[] }> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const orderFiend = query.order === 'popularity' ? 'popularity' : 'name';
-    console.log(orderFiend, direction);
     const data = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin('term.taxonomy', 'taxonomy')
       .where('taxonomy.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      .andWhere('term.name like :name', { name: `%${query.title}%` })
+      .andWhere('term.name like :title', { title: `%${query.title}%` })
       .orderBy(`term.${orderFiend}`, direction)
       .skip((query.page - 1) * query.perPage)
       .take(query.perPage)
