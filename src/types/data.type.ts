@@ -73,6 +73,8 @@ export interface IFActorView {
   studios: IFActorViewStudio[];
   properties: IFActorViewProperty[];
   aliases: string[];
+  views: number;
+  banner: string;
 }
 
 export interface IFActorViewStudio {

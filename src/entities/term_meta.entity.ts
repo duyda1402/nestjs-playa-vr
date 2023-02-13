@@ -13,7 +13,7 @@ export class TermMetaEntity {
   metaValue: Buffer;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @ManyToOne((_T) => TermEntity, (term) => term.termMetas)
+  @ManyToOne((_T) => TermEntity, (term) => term.metas)
   @JoinColumn({ name: 'term_id' })
   term: TermEntity;
 }
