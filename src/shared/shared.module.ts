@@ -5,9 +5,10 @@ import { VersionModule } from './version/version.module';
 import { StudiosListViewModule } from './studios/studios.module';
 import { ActorsModule } from './actors/actor.module';
 import { CategoryModule } from './category/category.module';
+import { VideoModule } from './videos/videos.module';
 
 @Module({
-  imports: [ConfigModule, VersionModule, UserModule, StudiosListViewModule, ActorsModule, CategoryModule],
+  imports: [ConfigModule, VersionModule, UserModule, StudiosListViewModule, ActorsModule, CategoryModule, VideoModule],
   controllers: [],
   providers: [],
 })

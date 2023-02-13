@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { IFActorListView, IFStudioView, IFRsp, IFPage } from 'src/types';
+import { IFActorListView, IFRsp, IFPage } from 'src/types';
 import { ActorService } from './actor.service';
+import { IFActorView } from './../../types/data.type';
 
 @Controller('')
 export class ActorsViewController {
@@ -27,7 +28,7 @@ export class ActorsViewController {
   }
 
   @Get('/actor/:id')
-  async getActorDetail(@Param('id') id: string): Promise<IFRsp<IFStudioView>> {
+  async getActorDetail(@Param('id') id: string): Promise<IFRsp<IFActorView>> {
     const result = await this.actorService.getActorDetail(id);
     return { status: { code: 1, message: 'okey' }, data: result };
   }

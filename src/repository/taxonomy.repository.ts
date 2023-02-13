@@ -10,22 +10,10 @@ export class TaxonomyRepository {
     @InjectRepository(TermTaxonomyEntity)
     private readonly texonomyRepository: Repository<TermTaxonomyEntity>
   ) {}
-  async getgetTaxonomyByTermAndLabel(termId: number, label: string): Promise<TermTaxonomyEntity> {
-    const options: FindOneOptions<TermTaxonomyEntity> = {
-      where: {
-        term: { id: termId },
-        taxonomy: label,
-      },
-    };
-    const term = await this.texonomyRepository.findOne(options);
-    return term;
-  }
+
   async getTaxonomyOne(where: any): Promise<TermTaxonomyEntity> {
     const options: FindOneOptions<TermTaxonomyEntity> = {
       where: where,
-      relations: {
-        term: true,
-      },
     };
     const term = await this.texonomyRepository.findOne(options);
     return term;
@@ -42,9 +30,6 @@ export class TaxonomyRepository {
       take: payload.perPage || 10, // limit to 20 records
       where: payload.where, // filter
       order: payload.order, //sort
-      relations: {
-        term: true,
-      },
     });
     return { itemTotal, data };
   }

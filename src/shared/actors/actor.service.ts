@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
 import { TermRepository } from 'src/repository';
-import { IFActorListView, IFStudioView, IFPage } from 'src/types';
+import { IFActorListView, IFPage } from 'src/types';
 import { IFActorView } from './../../types/data.type';
 
 @Injectable()
@@ -32,17 +32,14 @@ export class ActorService {
   }
 
   async getActorDetail(id: string): Promise<IFActorView | null> {
-    const term = await this.termRepository.getTermBySlug(id, '');
-    if (!term) throw new DataNotFoundException('Actor not found');
+    const result = await this.termRepository.getActorBySlug(id);
+    if (!result) throw new DataNotFoundException('Actor not found');
     return {
-      id: term.slug,
-      title: term.name,
+      id: result?.slug,
+      title: result?.name,
       preview: 'https://static.wikia.nocookie.net/rezero/images/6/6f/Catboyqt.jpg',
-      studios: [{ id: 'cat-pictures-fox', title: 'Cat Pictures Fox' }],
-      properties: [
-        { name: 'Birthdate', value: '16 Jan' },
-        { name: 'Birthplace', value: 'Kararagi, Kingdom of Lugnica' },
-      ],
+      studios: result?.studios,
+      properties: result?.properties,
       aliases: ['Felix Argyle', 'Blue Knight', 'Ferri-chan'],
       views: 500,
       banner: null,

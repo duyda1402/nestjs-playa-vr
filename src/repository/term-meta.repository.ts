@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
-import { FindOneOptions, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TermMetaRepository {
@@ -10,23 +10,22 @@ export class TermMetaRepository {
     private readonly termMetaRepository: Repository<TermMetaEntity>
   ) {}
 
-  async getListTermMetaByTermId(termId: number): Promise<TermMetaEntity[]> {
-    const termMeta = await this.termMetaRepository.find({
-      where: {
-        term: { id: termId },
-      },
-    });
+  async getListTermMetaByTermId(termId: number): Promise<TermMetaEntity> {
+    const termMeta = await this.termMetaRepository
+      .createQueryBuilder('tm')
+      .where('tm.termId = :termId', { termId: termId })
+      .getOne();
+
     return termMeta;
   }
 
   async getTermMetaByTermIdAndKey(termId: number, metaKey: string): Promise<TermMetaEntity> {
-    const options: FindOneOptions<TermMetaEntity> = {
-      where: {
-        term: { id: termId },
-        metaKey,
-      },
-    };
-    const term = await this.termMetaRepository.findOne(options);
+    const term = await this.termMetaRepository
+      .createQueryBuilder('tm')
+      .where('tm.termId = :termId', { termId: termId })
+      .andWhere('tm.metaKey =:key', { key: metaKey })
+      .getOne();
+
     return term;
   }
 }

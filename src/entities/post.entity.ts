@@ -1,16 +1,12 @@
-import { PostMetaEntity } from './post_meta.entity';
-import { UserEntity } from './user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'wp_rkr3j35p5r_posts' })
 export class PostEntity {
   @PrimaryGeneratedColumn({ name: 'ID' })
   id: number;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @ManyToOne((_T) => UserEntity, (user) => user.posts)
-  @JoinColumn({ name: 'post_author' })
-  postAuthor: UserEntity;
+  @Column({ name: 'post_author' })
+  postAuthor: number;
 
   @Column({ type: 'datetime', name: 'post_date' })
   postDate: Date;
@@ -30,7 +26,7 @@ export class PostEntity {
   @Column({ name: 'post_status' })
   postStatus: string;
 
-  @Column({ name: 'commentStatus' })
+  @Column({ name: 'comment_status' })
   commentStatus: string;
 
   @Column({ name: 'ping_status' })
@@ -69,13 +65,12 @@ export class PostEntity {
   @Column({ name: 'comment_count' })
   commentCount: number;
 
-  @Column({ name: 'postType' })
+  @Column({ name: 'post_type' })
   postType: string;
 
   @Column({ name: 'post_mime_type' })
   postMimeType: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @OneToMany((_T) => PostMetaEntity, (post) => post.postId)
-  postMetas: PostMetaEntity[];
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @OneToMany((_T) => PostMetaEntity, (post) => post.postId)
+// postMetas: PostMetaEntity[];

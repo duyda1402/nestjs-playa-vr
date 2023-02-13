@@ -16,7 +16,7 @@ export interface IFVideoListView {
   subtitle: string;
   preview_image: string;
   release_date: string;
-  details: IFVideoListDetails;
+  details: IFVideoListDetails[];
 }
 
 export interface IFVideoViewStudio {
@@ -98,6 +98,7 @@ export interface IFStudioView {
   title: string;
   preview: Url;
   description: string | Buffer;
+  views: number;
 }
 
 export interface IFCategoryListView {

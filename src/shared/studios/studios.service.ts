@@ -34,13 +34,14 @@ export class StudiosService {
   }
 
   async getStudioDetail(id: string): Promise<IFStudioView | null> {
-    const term = await this.termRepository.getTermBySlug(id, 'studio');
-    if (!term) throw new DataNotFoundException('Studio not found');
+    const result = await this.termRepository.getStudioBySlug(id);
+    if (!result) throw new DataNotFoundException('Studio not found');
     return {
-      id: term.slug,
-      title: term.name,
+      id: result?.slug,
+      title: result?.name,
       preview: 'https://placekitten.com/200/300',
-      description: term.taxonomy.description,
+      description: result?.description,
+      views: 100,
     };
   }
 }

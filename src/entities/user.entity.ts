@@ -1,6 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { UserMetaEntity } from './user_meta.entity';
-import { PostEntity } from './post.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'wp_rkr3j35p5r_users' })
 export class UserEntity {
@@ -35,11 +33,11 @@ export class UserEntity {
   @Column({ name: 'display_name' })
   displayName: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @OneToMany((_T) => UserMetaEntity, (userMeta) => userMeta.user_id)
-  userMetas: UserMetaEntity[];
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // @OneToMany((_T) => UserMetaEntity, (userMeta) => userMeta.user_id)
+  // userMetas: UserMetaEntity[];
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @OneToMany((_T) => PostEntity, (post) => post.postAuthor)
-  posts: PostEntity[];
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // @OneToMany((_T) => PostEntity, (post) => post.postAuthor)
+  // posts: PostEntity[];
 }
