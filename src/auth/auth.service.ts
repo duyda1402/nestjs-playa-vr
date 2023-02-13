@@ -14,17 +14,17 @@ export class AuthService {
     const { username, password } = loginDto;
     // Kiểm tra tính hợp lệ của thông tin đăng nhập
     if (!username || !password) {
-      throw new AuthFailedException('Username and password are required');
+      throw new AuthFailedException('Invalid credentials');
     }
     // Tìm kiếm người dùng trong cơ sở dữ liệu
     const user = await this.userService.findUserByUsername({ userLogin: username });
     if (!user) {
-      throw new AuthFailedException('Incorrect username/password');
+      throw new AuthFailedException('Invalid credentials');
     }
     // So sánh mật khẩu
     const isPasswordMatch = await this.comparePassword(password, user.password);
     if (!isPasswordMatch) {
-      throw new AuthFailedException('Incorrect username/password');
+      throw new AuthFailedException('Invalid credentials');
     }
     // Tạo token và trả về cho controller
     const payload = { username: user.userLogin, sub: user.id };

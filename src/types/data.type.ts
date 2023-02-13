@@ -1,8 +1,8 @@
 import { Url } from './response.type';
 
 enum TypeVideo {
-  trailer,
-  full,
+  'trailer',
+  'full',
 }
 
 export interface IFVideoListDetails {
@@ -18,7 +18,19 @@ export interface IFVideoListView {
   release_date: string;
   details: IFVideoListDetails[];
 }
-
+export interface IFVideoView {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  preview_image: Url;
+  release_date: number;
+  studio: IFVideoViewStudio;
+  categories: IFVideoViewCategory[];
+  actors: IFVideoViewActor[];
+  details: IFVideoViewDetails[];
+  views: number;
+}
 export interface IFVideoViewStudio {
   id: string;
   title: string;
@@ -54,7 +66,7 @@ export interface IFVideoLink {
   quality_order?: number;
 }
 export interface IFVideoViewDetails {
-  type: TypeVideo;
+  typeVideo?: string;
   duration_seconds: number;
   timeline_atlas: IFTimelineAtlas;
   timeline_markers: IFTimelineMarker[];
