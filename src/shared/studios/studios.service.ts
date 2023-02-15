@@ -18,7 +18,7 @@ export class StudiosService {
     const content = data.map((item) => ({
       id: item.slug,
       title: item.name,
-      preview: 'https://placekitten.com/200/300',
+      preview: 'https://mcdn.vrporn.com/200/300',
     }));
     const result = {
       page_index: query.page,
@@ -36,7 +36,7 @@ export class StudiosService {
     return {
       id: result?.slug,
       title: result?.name,
-      preview: result?.preview ? `https://placekitten.com/${result?.preview}` : 'https://placekitten.com/200/300',
+      preview: result?.preview ? `https://mcdn.vrporn.com/${result?.preview}` : 'https://mcdn.vrporn.com/200/300',
       description: result?.description,
       views: 100,
     };

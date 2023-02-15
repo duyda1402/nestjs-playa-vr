@@ -19,7 +19,7 @@ export class ActorService {
     const content = data.map((item: any) => ({
       id: item.slug,
       title: item.name,
-      preview: item?.preview ? `https://placekitten.com/${item?.preview}` : 'https://placekitten.com/200/300',
+      preview: item?.preview ? `https://mcdn.vrporn.com/${item?.preview}` : 'https://mcdn.vrporn.com/200/300',
     }));
     const result = {
       page_index: query.page,
@@ -37,7 +37,7 @@ export class ActorService {
     return {
       id: result?.slug,
       title: result?.name,
-      preview: result?.preview ? `https://placekitten.com/${result?.preview}` : 'https://placekitten.com/200/300',
+      preview: result?.preview ? `https://mcdn.vrporn.com/${result?.preview}` : 'https://mcdn.vrporn.com/200/300',
       studios: result?.studios,
       properties: result?.properties,
       aliases: ['Felix Argyle', 'Blue Knight', 'Ferri-chan'],
