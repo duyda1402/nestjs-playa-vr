@@ -9,6 +9,7 @@ import { PostEntity } from './post.entity';
 import { PostMetaEntity } from './post_meta.entity';
 import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity';
 import { TopPornstarsEntity } from './top_pornstar.entity';
+import { As3cfItemsEntity } from './as3cf_items.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TopPornstarsEntity } from './top_pornstar.entity';
       TermTaxonomyEntity,
       TermRelationShipsBasicEntity,
       TopPornstarsEntity,
+      As3cfItemsEntity,
     ]),
   ],
   exports: [
@@ -35,6 +37,7 @@ import { TopPornstarsEntity } from './top_pornstar.entity';
       TermTaxonomyEntity,
       TermRelationShipsBasicEntity,
       TopPornstarsEntity,
+      As3cfItemsEntity,
     ]),
   ],
 })

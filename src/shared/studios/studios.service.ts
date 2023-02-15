@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
-import { TaxonomyRepository, TermRepository } from 'src/repository';
+import { TermRepository } from 'src/repository';
 import { IFStudioListView, IFStudioView, IFPage } from 'src/types';
 
 @Injectable()
 export class StudiosService {
-  constructor(
-    private readonly termRepository: TermRepository,
-    private readonly taxonomyRepository: TaxonomyRepository
-  ) {}
+  constructor(private readonly termRepository: TermRepository) {}
 
   async getStudioList(query: {
     page?: number;
@@ -17,7 +14,7 @@ export class StudiosService {
     direction?: string;
     title?: string;
   }): Promise<IFPage<IFStudioListView[]>> {
-    const { itemTotal, data } = await this.termRepository.getTermsByLabel({ ...query, label: 'studio' });
+    const { itemTotal, data } = await this.termRepository.getStudioList({ ...query });
     const content = data.map((item) => ({
       id: item.slug,
       title: item.name,
@@ -39,7 +36,7 @@ export class StudiosService {
     return {
       id: result?.slug,
       title: result?.name,
-      preview: 'https://placekitten.com/200/300',
+      preview: result?.preview ? `https://placekitten.com/${result?.preview}` : 'https://placekitten.com/200/300',
       description: result?.description,
       views: 100,
     };
