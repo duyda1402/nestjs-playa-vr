@@ -11,18 +11,18 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService, private readonly userService: UserService) {}
 
   async login(loginDto: LoginDto): Promise<IFRsp<IFToken>> {
-    const { username, password } = loginDto;
+    const { login, password } = loginDto;
     // Kiểm tra tính hợp lệ của thông tin đăng nhập
-    if (!username || !password) {
+    if (!login || !password) {
       throw new AuthFailedException('Invalid credentials');
     }
     // Tìm kiếm người dùng trong cơ sở dữ liệu
-    const user = await this.userService.findUserByUsername({ userLogin: username });
+    const user = await this.userService.findUserByUsername([{ userLogin: login }, { userEmail: login }]);
     if (!user) {
       throw new AuthFailedException('Invalid credentials');
     }
     // So sánh mật khẩu
-    const isPasswordMatch = await this.comparePassword(password, user.password);
+    const isPasswordMatch = this.comparePassword(password, user.password);
     if (!isPasswordMatch) {
       throw new AuthFailedException('Invalid credentials');
     }
