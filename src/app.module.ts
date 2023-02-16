@@ -25,6 +25,7 @@ import { RepositoryModule } from './repository/repository.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         autoLoadEntities: true,
         synchronize: false,
+        // logging: true,
       }),
       inject: [ConfigService],
     }),
