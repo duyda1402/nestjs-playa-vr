@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOneOptions } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UserEntity } from '../../entities/user.entity';
 import { IFUserProfile } from 'src/types';
 import { UserMetaEntity } from 'src/entities/user_meta.entity';

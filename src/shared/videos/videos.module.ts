@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { VideoController } from './videos.controller';
 import { VideoService } from './videos.service';
-import { RepositoryModule } from 'src/repository/repository.module';
+import { EntitiesModule } from 'src/entities/entities.module';
 
 @Module({
-  imports: [RepositoryModule],
+  imports: [EntitiesModule],
   controllers: [VideoController],
   providers: [VideoService],
 })

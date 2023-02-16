@@ -4,14 +4,12 @@ import { AuthModule } from './auth/auth.module';
 import { SharedModule } from './shared/shared.module';
 import { EntitiesModule } from './entities/entities.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { RepositoryModule } from './repository/repository.module';
 
 @Module({
   imports: [
     AuthModule,
     SharedModule,
     EntitiesModule,
-    RepositoryModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -25,7 +23,7 @@ import { RepositoryModule } from './repository/repository.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         autoLoadEntities: true,
         synchronize: false,
-        // logging: true,
+        //logging: true,
       }),
       inject: [ConfigService],
     }),

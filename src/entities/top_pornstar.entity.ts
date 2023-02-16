@@ -6,7 +6,10 @@ export class TopPornstarsEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ name: 'term_id' })
+  termId: number;
+
+  @Column()
   slug: string;
 
   @Column()
