@@ -152,6 +152,7 @@ export class TermRepository {
       .createQueryBuilder('term')
       .leftJoinAndSelect(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id')
+      .leftJoinAndSelect(TermRelationShipsBasicEntity, 'tr', 'tr.termId = term.id')
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
       .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
       .andWhere('tm.metaKey = :metaKey', { metaKey: 'profile_image' })
