@@ -48,7 +48,6 @@ export class StudiosService {
       .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
       .getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-    console.log(data);
     const content = data.map((studio: any) => ({
       id: studio.slug,
       title: studio.name,
