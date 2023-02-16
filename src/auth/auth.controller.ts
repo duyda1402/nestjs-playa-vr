@@ -17,7 +17,7 @@ export class AuthController {
     return result;
   }
 
-  @Get('/auth/refresh')
+  @Post('/auth/refresh')
   @UseGuards(RefreshAuthGuard)
   async refreshToken(@Req() req: Request): Promise<IFRsp<IFToken>> {
     const user = req.user;
@@ -25,7 +25,7 @@ export class AuthController {
     return { status: { code: 1, message: 'ok' }, data: newAccessToken };
   }
 
-  @Get('/auth/sign-out')
+  @Post('/auth/sign-out')
   @UseGuards(JwtAuthGuard)
   async logout(): Promise<IFRsp<any>> {
     try {
