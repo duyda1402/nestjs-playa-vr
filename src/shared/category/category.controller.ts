@@ -7,7 +7,7 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Get('/categories')
-  async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFCategoryListView[]>>> {
+  async getActors(@Query() query: any): Promise<IFRsp<any>> {
     const page = Number(query['page-index']) || 1;
     const perPage = Number(query['page-size']) || 20;
     const order = query['order'] || '';

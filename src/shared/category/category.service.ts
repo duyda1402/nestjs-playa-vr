@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
-import { IFCategoryListView, IFPage } from 'src/types';
+import { IFCategoryListView } from 'src/types';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class CategoryService {
     order?: string;
     direction?: string;
     title?: string;
-  }): Promise<IFPage<IFCategoryListView[]>> {
+  }): Promise<any> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'term.name' : 'term.name';
     const data = await this.termRepository
@@ -36,25 +36,12 @@ export class CategoryService {
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
 
-    const itemTotal = await this.termRepository
-      .createQueryBuilder('term')
-      .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .where('tt.taxonomy = :taxonomy', { taxonomy: 'post_tag' })
-      .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
-      .getCount();
-
     const content = data.map((item: any) => ({
       id: item.slug,
       title: item.name,
       preview: item.meta,
     }));
-    const result = {
-      page_index: query.page,
-      item_count: query.perPage,
-      page_total: Math.ceil(itemTotal / query.perPage),
-      item_total: itemTotal,
-      content: content,
-    };
-    return result;
+
+    return content;
   }
 }

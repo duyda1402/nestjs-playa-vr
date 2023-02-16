@@ -126,9 +126,9 @@ export class ActorService {
     'breast_size',
     'hair_color',
     'eyecolor',
-    'webpage',
-    'twitter',
-    'facebook',
+    // 'webpage',
+    // 'twitter',
+    // 'facebook',
     'ethnicity',
     'country_of_origin',
   ];
