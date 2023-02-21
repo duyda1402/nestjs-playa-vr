@@ -32,12 +32,17 @@ export class AuthService {
     return { status: { code: 1, message: 'Login successful' }, data: token };
   }
 
-  async refreshToken(id: number): Promise<IFToken> {
-    const user = await this.userService.findUserByUsername({ id: id });
-    if (!user) throw new UnauthorizedException();
-    const token = this.generateToken({ sub: user.id, username: user.userLogin });
-    // xử lý logic tại đây, ví dụ như lưu token mới trong database.
-    return token;
+  async refreshToken(token: string): Promise<IFToken> {
+    try {
+      const playload = await this.jwtService.verifyAsync(token, { secret: 'rt-secret' });
+      const user = await this.userService.findUserByUsername({ id: playload['sub'] });
+      if (!user) throw new UnauthorizedException();
+      const tokenNew = this.generateToken({ sub: user.id, username: user.userLogin });
+      // xử lý logic tại đây, ví dụ như lưu token mới trong database.
+      return tokenNew;
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 
   async validateUser(id: number) {

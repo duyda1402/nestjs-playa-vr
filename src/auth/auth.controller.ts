@@ -18,17 +18,17 @@ export class AuthController {
   }
 
   @Post('/auth/refresh')
-  @UseGuards(RefreshAuthGuard)
-  async refreshToken(@Req() req: Request): Promise<IFRsp<IFToken>> {
-    const user = req.user;
-    const newAccessToken = await this.authService.refreshToken(user['sub']);
+  // @UseGuards(RefreshAuthGuard)
+  async refreshToken(@Body('refresh_token') token: string): Promise<IFRsp<IFToken>> {
+    const newAccessToken = await this.authService.refreshToken(token);
     return { status: { code: 1, message: 'ok' }, data: newAccessToken };
   }
 
   @Post('/auth/sign-out')
-  @UseGuards(JwtAuthGuard)
-  async logout(): Promise<IFRsp<any>> {
+  // @UseGuards(JwtAuthGuard)
+  async logout(@Body('refresh_token') token: string): Promise<IFRsp<any>> {
     try {
+      await this.authService.refreshToken(token);
       return { status: { code: 1, message: 'ok' } };
     } catch (error) {
       throw new UnauthorizedException();
