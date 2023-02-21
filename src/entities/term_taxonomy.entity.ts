@@ -20,15 +20,3 @@ export class TermTaxonomyEntity {
   @Column()
   count: number;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @ManyToOne((_T) => TermEntity, (term) => term.taxonomys)
-// termId: TermEntity;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @OneToOne((_T) => TermEntity, (term) => term.taxonomy)
-// @JoinColumn({ name: 'term_id' })
-// term: TermEntity;
-
-// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @OneToMany((_T) => TermRelationShipsBasicEntity, (termRB) => termRB.termTaxonomyId)
-// termRB: TermRelationShipsBasicEntity[];

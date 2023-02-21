@@ -32,12 +32,4 @@ export class UserEntity {
 
   @Column({ name: 'display_name' })
   displayName: string;
-
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @OneToMany((_T) => UserMetaEntity, (userMeta) => userMeta.user_id)
-  // userMetas: UserMetaEntity[];
-
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @OneToMany((_T) => PostEntity, (post) => post.postAuthor)
-  // posts: PostEntity[];
 }

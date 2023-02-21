@@ -5357,6 +5357,11 @@ pause@0.0.1:
   resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
   integrity sha512-KG8UEiEVkR3wGEb4m5yZkVCzigAD+cVEJck2CzYZO37ZGJfctvVptVO192MwrtPhzONn6go8ylnOdMhKqi4nfg==
 
+php-serialize@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/php-serialize/-/php-serialize-4.0.2.tgz#869bd4e01c2d26ac41c1d3e8058ab00ec072e3e5"
+  integrity sha512-73K9MqCnRn07sXxOht6kVLg+fg1lf/VYpecKy4n9ABcw1PJIAWfaxuQKML27EjolGHWxlXTy3rfh59AGrcUvIA==
+
 picocolors@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.0.tgz#cb5bdc74ff3f51892236eaf79d68bc44564ab81c"

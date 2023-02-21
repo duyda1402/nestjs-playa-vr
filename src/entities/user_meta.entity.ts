@@ -14,8 +14,4 @@ export class UserMetaEntity {
 
   @Column({ type: 'blob', name: 'meta_value' })
   metaValue: Buffer;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @ManyToOne((_T) => UserEntity, (user) => user.userMetas)
-  // @JoinColumn()
-  // user_id: UserEntity;
 }

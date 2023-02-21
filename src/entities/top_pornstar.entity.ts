@@ -17,8 +17,4 @@ export class TopPornstarsEntity {
 
   @Column({ type: 'datetime' })
   created: Date;
-
-  // @ManyToOne((_T) => TermEntity, (term) => term.topPorns)
-  // @JoinColumn({ name: 'term_id' })
-  // termId: TermEntity;
 }

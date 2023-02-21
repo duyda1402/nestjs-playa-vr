@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { IFRsp, IFToken, IFUserProfile } from 'src/types';
-import { JwtAuthGuard, RefreshAuthGuard } from './auth.guard';
+import { JwtAuthGuard } from './auth.guard';
 import { UnauthorizedException } from 'src/exceptions/auth.exception';
 import { UserService } from 'src/shared/user/user.service';
 
