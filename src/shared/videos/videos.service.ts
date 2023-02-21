@@ -81,7 +81,7 @@ export class VideoService {
 
     const countPromise = queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    console.log(data);
+
     const content = data.map((video: any) => ({
       id: video?.id,
       title: video?.postTitle,
