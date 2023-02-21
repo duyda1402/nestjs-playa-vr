@@ -6,9 +6,19 @@ import { StudiosListViewModule } from './studios/studios.module';
 import { ActorsModule } from './actors/actor.module';
 import { CategoryModule } from './category/category.module';
 import { VideoModule } from './videos/videos.module';
+import { MyOpensearchModule } from './open-search/opensearch.module';
 
 @Module({
-  imports: [ConfigModule, VersionModule, UserModule, StudiosListViewModule, ActorsModule, CategoryModule, VideoModule],
+  imports: [
+    ConfigModule,
+    VersionModule,
+    UserModule,
+    StudiosListViewModule,
+    ActorsModule,
+    CategoryModule,
+    VideoModule,
+    MyOpensearchModule,
+  ],
   controllers: [],
   providers: [],
 })

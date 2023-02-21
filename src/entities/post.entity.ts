@@ -71,6 +71,3 @@ export class PostEntity {
   @Column({ name: 'post_mime_type' })
   postMimeType: string;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @OneToMany((_T) => PostMetaEntity, (post) => post.postId)
-// postMetas: PostMetaEntity[];

@@ -2,10 +2,17 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
+import { OpenSearchService } from '../open-search/opensearch.service';
 
 @Controller('')
 export class VideoController {
-  constructor(private readonly videoService: VideoService) {}
+  constructor(private readonly videoService: VideoService, private readonly opensearchService: OpenSearchService) {}
+
+  @Get('/test')
+  async getView() {
+    const view = await this.opensearchService.countByQuery([1426287]);
+    return view;
+  }
 
   @Get('/videos')
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFVideoListView[]>>> {
@@ -14,12 +21,21 @@ export class VideoController {
     const order = query['order'] || '';
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
+    const studio = query['studio'] || [];
+    const actor = query['actor'] || [];
+    const includedCategories = query['included-categories'] ? query['included-categories'].split(',') : [];
+    const excludedCategories = query['excluded-categories'] ? query['excluded-categories'].split(',') : [];
+
     const result = await this.videoService.getVideoList({
       page,
       perPage,
       direction,
       title,
       order,
+      studio,
+      actor,
+      includedCategories,
+      excludedCategories,
     });
     return {
       status: { code: 1, message: 'okey' },

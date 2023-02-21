@@ -99,8 +99,8 @@ export class ActorService {
         const subQuery = qb
           .subQuery()
           .select('tr.objectId')
-          .from(TermRelationShipsBasicEntity, 'tr')
-          .where('tr.termId = :termId', { termId: actor.id })
+          .from(TermRelationShipsBasicEntity, 'tr2')
+          .where('tr2.termId = :termId', { termId: actor.id })
           .getQuery();
         return `tr.objectId IN (${subQuery})`;
       })

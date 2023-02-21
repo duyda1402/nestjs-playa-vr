@@ -27,20 +27,44 @@ export class VideoService {
     order?: string;
     direction?: string;
     title?: string;
+    studio?: string;
+    actor?: string;
+    includedCategories?: string[];
+    excludedCategories?: string[];
   }): Promise<IFPage<IFVideoListView[] | any>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
-    const order = query.order === 'popularity' ? 'post.postTitle' : 'post.postDate';
-    const dataPromis = this.postRepository
+    const order =
+      query.order === 'popularity'
+        ? 'post.postTitle'
+        : query.order === 'release_date'
+        ? 'post.postDate'
+        : 'post.postTitle';
+    const queryVideo = this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
-      .leftJoin(PostMetaEntity, 'pm', 'post.id = pm.postId')
-      .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue')
-      .leftJoin(PostEntity, 'p', 'p.id = pm.metaValue')
-      .where('post.postType = :postType', { postType: 'post' })
-      .andWhere('tr.termId = :termId', { termId: 251 })
+      .leftJoinAndSelect(PostMetaEntity, 'pm', 'post.id = pm.postId')
+      .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue')
+      .leftJoinAndSelect(PostEntity, 'p', 'p.id = pm.metaValue')
+      .where('post.postType = :postType AND tr.termId = :termId', { postType: 'post', termId: 251 })
+      .andWhere('post.postTitle LIKE :videoName', { videoName: `%${query.title}%` })
       .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
       .andWhere('pm.metaKey = :metaKey', { metaKey: '_thumbnail_id' })
+
+      .innerJoin(TermRelationShipsBasicEntity, 'trs', 'post.id = trs.objectId')
+      .leftJoinAndSelect(TermTaxonomyEntity, 'ttStudio', 'trs.termId = ttStudio.termId')
+      .leftJoinAndSelect(TermEntity, 'termStudio', 'termStudio.id = ttStudio.termId')
+      .andWhere('ttStudio.taxonomy = :taxonomy', { taxonomy: 'studio' })
+      .andWhere('termStudio.name LIKE :studioName', { studioName: `%${query.studio}%` })
+
+      .innerJoin(TermRelationShipsBasicEntity, 'trActor', 'post.id = trActor.objectId')
+      .leftJoinAndSelect(TermTaxonomyEntity, 'ttActor', 'trActor.termId = ttActor.termId')
+      .leftJoinAndSelect(TermEntity, 'termActor', 'termActor.id = ttActor.termId')
+      .andWhere('ttActor.taxonomy = :taxonomyActor', { taxonomyActor: 'porn_star_name' })
+      .andWhere('termActor.name LIKE :actorName', { actorName: `%${query.actor}%` });
+
+    const dataPromis = queryVideo
       .select([
+        'termStudio.name as subtitle',
         'post.id as id',
         'post.postName as postName',
         'post.postTitle as postTitle',
@@ -54,17 +78,13 @@ export class VideoService {
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
-    const countPromise = this.postRepository
-      .createQueryBuilder('post')
-      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
-      .where('tr.termId = :termId', { termId: 251 })
-      .andWhere('post.postType = :postType', { postType: 'post' })
-      .getCount();
+
+    const countPromise = queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
     const content = data.map((video: any) => ({
       id: video?.id,
       title: video?.postTitle,
-      subtitle: video?.postName,
+      subtitle: video?.subtitle,
       preview_image: video?.path ? `https://mcdn.vrporn.com/${video?.path}` : video?.path_guid,
       release_date: new Date(video?.postDate).getTime(),
       details: [
@@ -96,7 +116,12 @@ export class VideoService {
       .where('post.id = :postId', { postId: postId })
       .andWhere('tr.termId = :termId', { termId: 251 })
       .andWhere('pm.metaKey = :metaKey', { metaKey: '_thumbnail_id' })
+      .innerJoin(TermRelationShipsBasicEntity, 'trs', 'post.id = trs.objectId')
+      .leftJoinAndSelect(TermTaxonomyEntity, 'ttStudio', 'trs.termId = ttStudio.termId')
+      .leftJoinAndSelect(TermEntity, 'termStudio', 'termStudio.id = ttStudio.termId')
+      .andWhere('ttStudio.taxonomy = :taxonomy', { taxonomy: 'studio' })
       .select([
+        'termStudio.name as subtitle',
         'post.id as id',
         'post.postName as postName',
         'post.postTitle as postTitle',
@@ -135,7 +160,7 @@ export class VideoService {
     return {
       id: result?.id.toString(),
       title: result?.postTitle.toString(),
-      subtitle: result?.postName,
+      subtitle: result?.subtitle,
       description: result?.postContent.toString(),
       preview_image: result?.path ? `https://mcdn.vrporn.com/${result?.path}` : result?.path_guid,
       release_date: result?.postDate,
@@ -147,3 +172,11 @@ export class VideoService {
     };
   }
 }
+// const type = ['free_videos', 'paid_videos'];
+// const video_free = ['video', 'full_size_video_file', 'free_4k_stream', 'free_embed_video_5k'];
+// const video_paid = [
+//   'full_size_video_file_paid_sd',
+//   'full_size_video_file_paid',
+//   'paid_4k_stream',
+//   'paid_embed_video_5k',
+// ];
