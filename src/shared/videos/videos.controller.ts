@@ -14,12 +14,21 @@ export class VideoController {
     const order = query['order'] || '';
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
+    const studio = query['studio'] || [];
+    const actor = query['actor'] || [];
+    const includedCategories = query['included-categories'] ? query['included-categories'].split(',') : [];
+    const excludedCategories = query['excluded-categories'] ? query['excluded-categories'].split(',') : [];
+
     const result = await this.videoService.getVideoList({
       page,
       perPage,
       direction,
       title,
       order,
+      studio,
+      actor,
+      includedCategories,
+      excludedCategories,
     });
     return {
       status: { code: 1, message: 'okey' },
