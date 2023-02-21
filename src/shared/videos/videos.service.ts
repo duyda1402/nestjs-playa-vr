@@ -81,6 +81,7 @@ export class VideoService {
 
     const countPromise = queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
+    console.log(data);
     const content = data.map((video: any) => ({
       id: video?.id,
       title: video?.postTitle,
@@ -172,11 +173,3 @@ export class VideoService {
     };
   }
 }
-// const type = ['free_videos', 'paid_videos'];
-// const video_free = ['video', 'full_size_video_file', 'free_4k_stream', 'free_embed_video_5k'];
-// const video_paid = [
-//   'full_size_video_file_paid_sd',
-//   'full_size_video_file_paid',
-//   'paid_4k_stream',
-//   'paid_embed_video_5k',
-// ];
