@@ -18,7 +18,9 @@ export class ActorService {
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
-    private readonly termMetaRepository: Repository<TermMetaEntity>
+    private readonly termMetaRepository: Repository<TermMetaEntity>,
+    @InjectRepository(PostEntity)
+    private readonly postRepository: Repository<PostEntity>
   ) {}
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
@@ -74,14 +76,27 @@ export class ActorService {
     if (!actor) throw new DataNotFoundException('Actor not found');
     const actorPromise = this.termRepository
       .createQueryBuilder('term')
-      .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id')
-      .leftJoinAndSelect(PostEntity, 'post', 'post.id = tm.metaValue')
-      .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = tm.metaValue')
-      .where('term.slug = :slug', { slug })
-      .andWhere('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
-      .andWhere('tm.metaKey = :metaKey', { metaKey: 'profile_image' })
-      .select(['term.slug as slug', 'term.name as name', 'post.guid as path_guid', 'ai.path as path'])
+      .where('term.id = :termImageId', { termImageId: actor.id })
+      //profile_image
+      .leftJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :avatarMetaKey', {
+        avatarMetaKey: 'profile_image',
+      })
+      .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = tm.metaValue')
+      .leftJoin(PostEntity, 'post', 'post.id = tm.metaValue')
+      //top_banner_background
+      .leftJoin(TermMetaEntity, 'tmTow', 'tmTow.termId = term.id AND tmTow.metaKey = :bannerMetaKey', {
+        bannerMetaKey: 'top_banner_background',
+      })
+      .leftJoin(As3cfItemsEntity, 'aiBanner', 'aiBanner.sourceId = tmTow.metaValue')
+      .leftJoin(PostEntity, 'postBanner', 'postBanner.id = tmTow.metaValue')
+      .select([
+        'term.slug as slug',
+        'term.name as name',
+        'post.guid as path_avatar_post',
+        'ai.path as path_avatar',
+        'postBanner.guid as path_banner_post',
+        'aiBanner.path as path_banner',
+      ])
       .getRawOne();
     const propertiesPromise = this.termMetaRepository
       .createQueryBuilder('tm')
@@ -92,29 +107,45 @@ export class ActorService {
     const studiosPromise = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'term.id = tt.termId')
-      .leftJoinAndSelect(TermRelationShipsBasicEntity, 'tr', 'term.id = tr.termId')
-      .select(['term.slug as id', 'term.name as title'])
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
+      .leftJoinAndSelect(TermRelationShipsBasicEntity, 'tr', 'term.id = tr.termId')
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
-          .select('tr.objectId')
-          .from(TermRelationShipsBasicEntity, 'tr2')
-          .where('tr2.termId = :termId', { termId: actor.id })
+          .from(TermRelationShipsBasicEntity, 'termRela')
+          .where('termRela.termId = :termRelaId', { termRelaId: actor.id })
+          .select('termRela.objectId')
           .getQuery();
         return `tr.objectId IN (${subQuery})`;
       })
+      .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
-    const [properties, studios, actorInfo] = await Promise.all([propertiesPromise, studiosPromise, actorPromise]);
+    const postsPromise = this.postRepository
+      .createQueryBuilder('post')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.id')
+      .where('tr.termId = :termId', { termId: actor.id })
+      .getMany();
+    const [properties, studios, actorInfo, posts] = await Promise.all([
+      propertiesPromise,
+      studiosPromise,
+      actorPromise,
+      postsPromise,
+    ]);
+    const arrPostId = posts ? posts.map((item) => Number(item.id)) : [];
+    //count_view
     return {
       id: actorInfo?.slug,
       title: actorInfo?.name,
-      preview: actorInfo?.path ? `https://mcdn.vrporn.com/${actorInfo?.path}` : actorInfo?.path_guid,
+      preview: actorInfo?.path_avatar
+        ? `https://mcdn.vrporn.com/${actorInfo?.path_avatar}`
+        : actorInfo?.path_avatar_post,
       studios: studios,
       properties: properties,
       aliases: ['Felix Argyle', 'Blue Knight', 'Ferri-chan'],
       views: 500,
-      banner: null,
+      banner: actorInfo?.path_banner
+        ? `https://mcdn.vrporn.com/${actorInfo?.path_banner}`
+        : actorInfo?.path_banner_post,
     };
   }
 
