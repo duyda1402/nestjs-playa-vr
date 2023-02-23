@@ -11,6 +11,7 @@ import { TermRelationShipsBasicEntity } from './term_relationships_basic.entity'
 import { TopPornstarsEntity } from './top_pornstar.entity';
 import { As3cfItemsEntity } from './as3cf_items.entity';
 import { SubscriptionEntity } from './subscriptions.entity';
+import { PopularScoresEntity } from './popular_scores.entity';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SubscriptionEntity } from './subscriptions.entity';
       TopPornstarsEntity,
       As3cfItemsEntity,
       SubscriptionEntity,
+      PopularScoresEntity,
     ]),
   ],
   exports: [
@@ -41,6 +43,7 @@ import { SubscriptionEntity } from './subscriptions.entity';
       TopPornstarsEntity,
       As3cfItemsEntity,
       SubscriptionEntity,
+      PopularScoresEntity,
     ]),
   ],
 })

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
+import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
-import { TopPornstarsEntity } from 'src/entities/top_pornstar.entity';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
 import { IFStudioListView, IFStudioView, IFPage, QueryBody } from 'src/types';
 import { Repository } from 'typeorm';
@@ -25,18 +25,39 @@ export class StudiosService {
     let data = [];
     let count = 0;
     if (query.order === 'popularity') {
-      //demo query
-      const query = await this.termRepository
+      const studioQuery = this.termRepository
         .createQueryBuilder('term')
         .innerJoin(TermTaxonomyEntity, 'tt', 'term.id = tt.termId')
-        .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
-        .select(['term'])
+        .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
+        .leftJoin(TermMetaEntity, 'tm', 'tm.termId = term.id')
+        .leftJoinAndSelect(PostEntity, 'post', `post.id = ${this.strQuery} `)
+        .leftJoinAndSelect(As3cfItemsEntity, 'ai', `ai.sourceId = ${this.strQuery}`)
+        .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
+        .andWhere('tm.metaKey = :metaKey', { metaKey: 'logo_single_post' });
+
+      const dataPromise = studioQuery
+        .select([
+          'term.id as id',
+          'term.slug as slug',
+          'term.name as name',
+          'ai.path as path_as3',
+          'tm.metaValue as metaValue',
+          'post.guid as path_guid',
+        ])
         .addSelect((subQuery) => {
-          const query = subQuery.select('SUM(tpp.score)', 'result').from(TopPornstarsEntity, 'tpp');
+          const query = subQuery
+            .select('SUM(pp.premiumPopularScore)', 'result')
+            .from(PopularScoresEntity, 'pp')
+            .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+            .where('tr.termId = term.id');
           return query;
         }, 'popularity')
+        .limit(query.perPage)
+        .orderBy('popularity', direction)
+        .offset((query.page - 1) * query.perPage)
         .getRawMany();
-      console.log(query);
+      const countPromise = studioQuery.getCount();
+      [data, count] = await Promise.all([dataPromise, countPromise]);
     } else {
       const dataPromise = this.termRepository
         .createQueryBuilder('term')

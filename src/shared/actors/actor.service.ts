@@ -11,6 +11,7 @@ import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { TopPornstarsEntity } from 'src/entities/top_pornstar.entity';
+import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 
 @Injectable()
 export class ActorService {
@@ -25,32 +26,34 @@ export class ActorService {
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
-    const order = query.order === 'popularity' ? 'tp.score' : 'term.name';
-    const dataPromise = this.termRepository
+    const order = query.order === 'popularity' ? 'popularity' : 'term.name';
+    const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .leftJoinAndSelect(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .leftJoinAndSelect(TopPornstarsEntity, 'tp', 'tp.termId = term.id')
       .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id')
       .leftJoinAndSelect(PostEntity, 'post', 'post.id = tm.metaValue')
       .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = tm.metaValue')
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
       .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
-      .andWhere('tm.metaKey = :metaKey', { metaKey: 'profile_image' })
+      .andWhere('tm.metaKey = :metaKey', { metaKey: 'profile_image' });
+
+    const dataPromise = actorQuery
       .select(['term.slug as slug', 'term.name as name', 'post.guid as path_guid', 'ai.path as path'])
+      .addSelect((subQuery) => {
+        const query = subQuery
+          .select('SUM(pp.premiumPopularScore)', 'result')
+          .from(PopularScoresEntity, 'pp')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+          .where('tr.termId = term.id');
+        return query;
+      }, 'popularity')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
-
-    const countPromise = this.termRepository
-      .createQueryBuilder('term')
-      .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .where('term.name LIKE :title', { title: `%${query.title}%` })
-      .andWhere('tt.taxonomy = :taxonomy', {
-        taxonomy: 'porn_star_name',
-      })
-      .getCount();
+    const countPromise = actorQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
+    console.log(data);
     const content = data.map((item: any) => ({
       id: item.slug,
       title: item.name,

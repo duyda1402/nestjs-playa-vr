@@ -12,6 +12,7 @@ import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { convertTimeToSeconds } from 'src/helper';
+import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 
 @Injectable()
 export class VideoService {
@@ -35,24 +36,17 @@ export class VideoService {
   }): Promise<IFPage<IFVideoListView[] | any>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order =
-      query.order === 'popularity'
-        ? 'post.postTitle'
-        : query.order === 'release_date'
-        ? 'post.postDate'
-        : 'post.postTitle';
+      query.order === 'popularity' ? 'popularity' : query.order === 'release_date' ? 'post.postDate' : 'post.postTitle';
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
       //=================  lọc theo tên
-      .leftJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
       .leftJoin(PostMetaEntity, 'pm', 'post.id = pm.postId')
       .leftJoin(PostEntity, 'p', 'p.id = pm.metaValue')
       .where('post.postType = :postType AND tr.termId = :termId', { postType: 'post', termId: 251 })
       .andWhere('post.postTitle LIKE :videoName', { videoName: `%${query.title}%` })
       .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
       //=============== Lấy ảnh
-      // .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue AND pm.metaKey = :metaKey', {
-      //   metaKey: '_thumbnail_id',
-      // })
       .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue')
       .andWhere('pm.metaKey = :metaKey', { metaKey: '_thumbnail_id' })
       //====================== Lọc theo Lọc theo studio
@@ -97,14 +91,19 @@ export class VideoService {
         'post.id as id',
         'post.postName as postName',
         'post.postTitle as postTitle',
-        'post.postContent as postContent',
         'post.postDate as postDate',
-        'pm.metaValue as value',
         'ai.path as path',
         'p.guid as path_guid',
         'pm_attach_trailer.metaValue as infoTrailer',
         'pm_attach_full.metaValue as infoFull',
       ])
+      .addSelect((subQuery) => {
+        const query = subQuery
+          .select('SUM(pp.premiumPopularScore)', 'result')
+          .from(PopularScoresEntity, 'pp')
+          .where('pp.postId = post.id');
+        return query;
+      }, 'popularity')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
@@ -112,7 +111,7 @@ export class VideoService {
 
     const countPromise = queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    // console.log(data);
+    console.log(data);
     const content = data.map((video: any) => {
       const details = [];
       const trailer = video?.infoTrailer ? unserialize(video?.infoTrailer) : null;
