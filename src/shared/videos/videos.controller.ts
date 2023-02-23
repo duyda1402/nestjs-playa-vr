@@ -21,8 +21,8 @@ export class VideoController {
     const order = query['order'] || '';
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
-    const studio = query['studio'] || [];
-    const actor = query['actor'] || [];
+    const studio = query['studio'] || null;
+    const actor = query['actor'] || null;
     const includedCategories = query['included-categories'] ? query['included-categories'].split(',') : [];
     const excludedCategories = query['excluded-categories'] ? query['excluded-categories'].split(',') : [];
 

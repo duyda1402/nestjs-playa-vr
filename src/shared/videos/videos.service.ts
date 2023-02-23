@@ -5,7 +5,7 @@ import { PostMetaEntity } from 'src/entities/post_meta.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
 import { unserialize } from 'php-serialize';
-import { IFPage, IFVideoListView } from 'src/types';
+import { IFPage, IFVideoListView, QueryBody } from 'src/types';
 import { IFVideoView } from 'src/types/index';
 import { Repository } from 'typeorm';
 import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
@@ -34,34 +34,47 @@ export class VideoService {
     includedCategories?: string[];
     excludedCategories?: string[];
   }): Promise<IFPage<IFVideoListView[] | any>> {
+    const paramActor = query.actor ? query.actor : null;
+    const paramStudio = query.studio ? query.studio : null;
+    const paramTitle = query.title ? query.title : '';
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order =
-      query.order === 'popularity' ? 'popularity' : query.order === 'release_date' ? 'post.postDate' : 'post.postTitle';
+      query.order === 'popularity' ? 'popularity' : query.order === 'release_date' ? 'post.postDate' : 'postName';
+
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
-      //=================  lọc theo tên
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
-      .leftJoin(PostMetaEntity, 'pm', 'post.id = pm.postId')
-      .leftJoin(PostEntity, 'p', 'p.id = pm.metaValue')
-      .where('post.postType = :postType AND tr.termId = :termId', { postType: 'post', termId: 251 })
-      .andWhere('post.postTitle LIKE :videoName', { videoName: `%${query.title}%` })
-      .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
-      //=============== Lấy ảnh
-      .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue')
-      .andWhere('pm.metaKey = :metaKey', { metaKey: '_thumbnail_id' })
-      //====================== Lọc theo Lọc theo studio
-      .leftJoin(TermRelationShipsBasicEntity, 'trs', 'post.id = trs.objectId')
-      .leftJoinAndSelect(TermTaxonomyEntity, 'ttStudio', 'trs.termId = ttStudio.termId')
-      .leftJoinAndSelect(TermEntity, 'termStudio', 'termStudio.id = ttStudio.termId')
-      .andWhere('ttStudio.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      .andWhere('termStudio.name LIKE :studioName', { studioName: `%${query.studio}%` })
-      //====================== Lọc theo actor
-      .leftJoin(TermRelationShipsBasicEntity, 'trActor', 'post.id = trActor.objectId')
-      .leftJoinAndSelect(TermTaxonomyEntity, 'ttActor', 'trActor.termId = ttActor.termId')
-      .leftJoinAndSelect(TermEntity, 'termActor', 'termActor.id = ttActor.termId')
-      .andWhere('ttActor.taxonomy = :taxonomyActor', { taxonomyActor: 'porn_star_name' })
-      .andWhere('termActor.name LIKE :actorName', { actorName: `%${query.actor}%` })
-      //====================== Tìm thời gian phát video trailer
+      //=================  lọc điều kiện video
+      .where('post.postType = "post" AND post.postStatus = "publish"')
+      .andWhere('tr.termId = :termRelationId', { termRelationId: 251 });
+    if (paramTitle) queryVideo.andWhere('post.postTitle LIKE :videoName', { videoName: `%${paramTitle}%` });
+    //======== Lấy studio gán subtitle
+    queryVideo
+      .innerJoin(TermRelationShipsBasicEntity, 'trStudio', 'post.id = trStudio.objectId')
+      .leftJoin(TermEntity, 'termStudio', 'termStudio.id = trStudio.termId')
+      .leftJoin(TermTaxonomyEntity, 'taxoStudio', 'taxoStudio.termId = termStudio.id')
+      .andWhere('taxoStudio.taxonomy = "studio"');
+    //======== Lọc theo studio
+    if (paramStudio)
+      queryVideo.andWhere('termStudio.name LIKE :charNameStudio', { charNameStudio: `%${paramStudio}%` });
+    //==== Lọc theo actor
+    if (paramActor)
+      queryVideo
+        .innerJoin(TermRelationShipsBasicEntity, 'trActor', 'post.id = trActor.objectId')
+        .leftJoin(TermEntity, 'termActor', 'termActor.id = trActor.termId')
+        .leftJoin(TermTaxonomyEntity, 'taxoActoer', 'taxoActoer.termId = termActor.id')
+        .andWhere('taxoActoer.taxonomy = "porn_star_name"')
+        .andWhere('termActor.name LIKE :charNameActor', { charNameActor: `%${paramActor}%` });
+    //=============== Lấy ảnh
+    queryVideo
+      .leftJoinAndSelect(PostMetaEntity, 'pm', 'post.id = pm.postId AND pm.metaKey = :metaThumbKey', {
+        metaThumbKey: '_thumbnail_id',
+      })
+      .leftJoinAndSelect(PostEntity, 'p', 'p.id = pm.metaValue')
+      .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue');
+
+    //====================== Tìm thời gian phát video trailer
+    queryVideo
       .leftJoin(PostMetaEntity, 'pm_trailer', 'post.id = pm_trailer.postId AND pm_trailer.metaKey = :trailerKey', {
         trailerKey: 'video',
       })
@@ -109,45 +122,20 @@ export class VideoService {
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
 
-    const countPromise = queryVideo.getCount();
+    const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
     console.log(data);
+
     const content = data.map((video: any) => {
-      const details = [];
-      const trailer = video?.infoTrailer ? unserialize(video?.infoTrailer) : null;
-      const timeTrailer =
-        trailer && trailer['length']
-          ? Number(trailer['length'])
-          : trailer['length_formatted']
-          ? convertTimeToSeconds(trailer['length_formatted'])
-          : null;
-      if (timeTrailer)
-        details.push({
-          type: 'trailer',
-          duration_seconds: timeTrailer,
-        });
-      const full = video?.infoFull ? unserialize(video?.infoFull) : null;
-      const timeFull =
-        full && full['length']
-          ? Number(full['length'])
-          : full['length_formatted']
-          ? convertTimeToSeconds(full['length_formatted'])
-          : null;
-      if (timeFull)
-        details.push({
-          type: 'full',
-          duration_seconds: timeFull,
-        });
       return {
         id: video?.id,
         title: video?.postTitle,
         subtitle: video?.subtitle,
         preview_image: video?.path ? `https://mcdn.vrporn.com/${video?.path}` : video?.path_guid,
         release_date: new Date(video?.postDate).getTime(),
-        details: details,
+        details: this.getInfoDetailsVideo(video?.infoTrailer, video?.infoFull),
       };
     });
-
     const result = {
       page_index: query.page,
       item_count: query.perPage,
@@ -210,7 +198,6 @@ export class VideoService {
         'pm_attach_full.metaValue as infoFull',
       ])
       .getRawOne();
-    console.log(result);
     if (!result) throw new DataNotFoundException('Studio not found');
     const studioPromise = this.termRepository
       .createQueryBuilder('term')
@@ -237,31 +224,7 @@ export class VideoService {
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
     const [studio, categories, actors] = await Promise.all([studioPromise, categoriesPromise, actorsPromise]);
-    const details = [];
-    const trailer = result?.infoTrailer ? unserialize(result?.infoTrailer) : null;
-    const timeTrailer =
-      trailer && trailer['length']
-        ? Number(trailer['length'])
-        : trailer['length_formatted']
-        ? convertTimeToSeconds(trailer['length_formatted'])
-        : null;
-    if (timeTrailer)
-      details.push({
-        type: 'trailer',
-        duration_seconds: timeTrailer,
-      });
-    const full = result?.infoFull ? unserialize(result?.infoFull) : null;
-    const timeFull =
-      full && full['length']
-        ? Number(full['length'])
-        : full['length_formatted']
-        ? convertTimeToSeconds(full['length_formatted'])
-        : null;
-    if (timeFull)
-      details.push({
-        type: 'full',
-        duration_seconds: timeFull,
-      });
+
     return {
       id: result?.id.toString(),
       title: result?.postTitle.toString(),
@@ -273,7 +236,36 @@ export class VideoService {
       categories: categories,
       actors: actors,
       views: 500,
-      details: details,
+      details: this.getInfoDetailsVideo(result?.infoTrailer, result?.infoFull),
     };
+  }
+
+  getInfoDetailsVideo(infoTrailer: string | null, infoFull: string | null) {
+    const details = [];
+    const trailer = infoTrailer ? unserialize(infoTrailer) : null;
+    const timeTrailer =
+      trailer && trailer['length']
+        ? Number(trailer['length'])
+        : trailer['length_formatted']
+        ? convertTimeToSeconds(trailer['length_formatted'])
+        : null;
+    if (timeTrailer)
+      details.push({
+        type: 'trailer',
+        duration_seconds: timeTrailer,
+      });
+    const full = infoFull ? unserialize(infoFull) : null;
+    const timeFull =
+      full && full['length']
+        ? Number(full['length'])
+        : full['length_formatted']
+        ? convertTimeToSeconds(full['length_formatted'])
+        : null;
+    if (timeFull)
+      details.push({
+        type: 'full',
+        duration_seconds: timeFull,
+      });
+    return details;
   }
 }
