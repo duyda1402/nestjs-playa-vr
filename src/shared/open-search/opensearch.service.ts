@@ -46,6 +46,7 @@ export class OpenSearchService {
       body: query,
     });
 
+    console.log(`${prefix}-analytics-report`, query);
     console.log(body);
     return body?.aggregations?.stats?.value || 0;
   }
