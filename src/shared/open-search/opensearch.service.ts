@@ -22,7 +22,9 @@ export class OpenSearchService {
       size: 0,
       query: {
         bool: {
-          must: [],
+          must: [{
+            term: {type: 'postviews'}
+          }],
         },
       },
       aggs: {
