@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { OpensearchClient, InjectOpensearchClient } from 'nestjs-opensearch';
-import {TermTaxonomyEntity} from "../../entities/term_taxonomy.entity";
 import {TermRelationShipsBasicEntity} from "../../entities/term_relationships_basic.entity";
 import {Repository} from "typeorm";
 import {PostEntity} from "../../entities/post.entity";
@@ -8,7 +7,7 @@ import {count} from "rxjs";
 import {isProduction} from "../../helper";
 
 @Injectable()
-export class OpenSearchService {
+export class MyOpenSearchService {
   constructor(
     @InjectOpensearchClient()
     private readonly opensearchService: OpensearchClient,
