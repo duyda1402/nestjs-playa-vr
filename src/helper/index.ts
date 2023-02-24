@@ -38,12 +38,12 @@ export function getDownloadId(downloadUrl: string): number {
 
 export function cdnReplaceDomain(url: string, domain?: string): string {
   if (!domain) {
-    domain = 'https://mcdn.vrporn.com/';
+    domain = 'https://mcdn.vrporn.com';
   }
 
   const urlPart = urlParse(url);
 
-  return `${domain}${urlPart?.pathname}${urlPart.query}`;
+  return `${domain}/${urlPart?.pathname}${urlPart.query}`;
 }
 
 export function signCdnUrl(url: string): string {

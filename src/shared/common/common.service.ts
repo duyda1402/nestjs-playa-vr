@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { appendCdnDomain, cdnReplaceDomain, getDownloadId, getTableWithPrefix } from '../../helper';
+import {appendCdnDomain, cdnReplaceDomain, getDownloadId, getTableWithPrefix, signCdnUrl} from '../../helper';
 import { unserialize } from 'php-serialize';
 import { As3cfItemsEntity } from './../../entities/as3cf_items.entity';
 import { PostMetaEntity } from './../../entities/post_meta.entity';
@@ -253,7 +253,7 @@ export class CommonService {
           videoLinks.push({
             is_stream: true,
             is_download: false,
-            url: videoData[`${v.f}${fieldMiddle}_stream`],
+            url: this.streamLink(videoData[`${v.f}${fieldMiddle}_stream`] || null),
             unavailable_reason: null,
             projection: projection,
             stereo: stereo,
@@ -266,7 +266,7 @@ export class CommonService {
           videoLinks.push({
             is_stream: false,
             is_download: true,
-            url: videoData[`${v.f}${fieldMiddle}_source`],
+            url: this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
             unavailable_reason: null,
             projection: projection,
             stereo: stereo,
@@ -279,7 +279,7 @@ export class CommonService {
           videoLinks.push({
             is_stream: true,
             is_download: false,
-            url: userLevel < v.ul || type === 'full' ? null : videoData[`${v.f}${fieldMiddle}_stream`] || '',
+            url: userLevel < v.ul || type === 'full' ? null : this.streamLink(videoData[`${v.f}${fieldMiddle}_stream`] || null),
             unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
             projection: projection,
             stereo: stereo,
@@ -292,7 +292,7 @@ export class CommonService {
           videoLinks.push({
             is_stream: false,
             is_download: true,
-            url: userLevel < v.ul || type === 'full' ? null : videoData[`${v.f}${fieldMiddle}_source`] || '',
+            url: userLevel < v.ul || type === 'full' ? null : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
             unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
             projection: projection,
             stereo: stereo,
@@ -304,6 +304,31 @@ export class CommonService {
     });
 
     return videoLinks;
+  }
+
+  downloadLink(url: string | null): string {
+    if(url) {
+      let link = cdnReplaceDomain(url, 'https://mcdnd.vrporn.com');
+
+      if(link) {
+        link += `?cd=attachment`;
+
+        return signCdnUrl(link);
+      }
+    }
+
+    return url;
+  }
+  streamLink(url: string | null): string {
+    if(url) {
+      let link = cdnReplaceDomain(url, 'https://mcdne.vrporn.com');
+
+      if(link) {
+        return signCdnUrl(link);
+      }
+    }
+
+    return url;
   }
 
   async getVideoMaxQuality(videoId: number): Promise<number> {
