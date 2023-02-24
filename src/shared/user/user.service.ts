@@ -5,6 +5,7 @@ import { UserEntity } from '../../entities/user.entity';
 import { IFUserProfile } from 'src/types';
 import { UserMetaEntity } from 'src/entities/user_meta.entity';
 import { SubscriptionEntity } from 'src/entities/subscriptions.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,8 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(SubscriptionEntity)
-    private readonly subRepository: Repository<SubscriptionEntity>
+    private readonly subRepository: Repository<SubscriptionEntity>,
+    private readonly jwtService: JwtService
   ) {}
 
   async getUserProfile(id: number): Promise<IFUserProfile> {
@@ -62,5 +64,18 @@ export class UserService {
 
   async updateUser(id: number, newData: Partial<UserEntity>): Promise<any> {
     return await this.userRepository.update(id, newData);
+  }
+
+  async getUserLevel(token: string): Promise<number> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, { secret: 'at-secret' });
+      //User Level: 0: Non-Login, 1: Logged-in, 2: Premium
+      const userInfo = await this.findUserInfo(payload?.sub);
+      if (!userInfo) return 0;
+      if (userInfo?.role === 'premium') return 2;
+      return 1;
+    } catch (err) {
+      return 0;
+    }
   }
 }

@@ -15,6 +15,7 @@ import { convertTimeToSeconds } from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class VideoService {
@@ -24,7 +25,8 @@ export class VideoService {
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     private readonly opensearchService: OpenSearchService,
-    private readonly commonService: CommonService
+    private readonly commonService: CommonService,
+    private readonly userService: UserService
   ) {}
 
   async getVideoList(query: {
@@ -152,7 +154,9 @@ export class VideoService {
     return result;
   }
 
-  async getVideoDetail(postId: string): Promise<IFVideoView | null> {
+  async getVideoDetail(postId: string, token: string): Promise<IFVideoView | null> {
+    const userLevel = await this.userService.getUserLevel(token);
+    console.log(userLevel);
     const result = await this.postRepository
       .createQueryBuilder('post')
       .leftJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -293,35 +297,35 @@ export class VideoService {
     const details = [];
     const trailer = data.infoTrailer ? unserialize(data.infoTrailer) : null;
     const timeTrailer = trailer
-        ? trailer?.length
-            ? Number(trailer?.length)
-            : trailer?.length_formatted
-                ? convertTimeToSeconds(trailer?.length_formatted)
-                : null
-        : null;
+      ? trailer?.length
+        ? Number(trailer?.length)
+        : trailer?.length_formatted
+        ? convertTimeToSeconds(trailer?.length_formatted)
+        : null
+      : null;
 
-    const userLevel = 0;//Dựa vào token để xác định
+    const userLevel = 0; //Dựa vào token để xác định
     const videoData = this.commonService.loadVideosData(videoId);
 
     if (timeTrailer)
       details.push({
         type: 'trailer',
         duration_seconds: timeTrailer,
-        links: this.commonService.buildVideoLinks('trailer', videoData, userLevel)
+        links: this.commonService.buildVideoLinks('trailer', videoData, userLevel),
       });
     const full = data.infoFull ? unserialize(data.infoFull) : null;
     const timeFull = full
-        ? full?.length
-            ? Number(full?.length)
-            : full?.length_formatted
-                ? convertTimeToSeconds(full?.length_formatted)
-                : null
-        : null;
+      ? full?.length
+        ? Number(full?.length)
+        : full?.length_formatted
+        ? convertTimeToSeconds(full?.length_formatted)
+        : null
+      : null;
     if (timeFull)
       details.push({
         type: 'full',
         duration_seconds: timeFull,
-        links: this.commonService.buildVideoLinks('full', videoData, userLevel)
+        links: this.commonService.buildVideoLinks('full', videoData, userLevel),
       });
     return details;
   }

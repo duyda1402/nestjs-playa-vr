@@ -1,4 +1,4 @@
-import * as urlParse from "url-parse";
+import * as urlParse from 'url-parse';
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -21,23 +21,23 @@ export function appendCdnDomain(path: string): string {
 }
 
 export function getDownloadId(downloadUrl: string): number {
-  if(!isNaN(Number(downloadUrl))) {
+  if (!isNaN(Number(downloadUrl))) {
     return Number(downloadUrl);
   }
 
   const parts = downloadUrl.split('/');
   let len = parts.length - 1;
 
-  if(parts[len] === '') {
-     len--;
+  if (parts[len] === '') {
+    len--;
   }
 
   return Number(parts[len]);
 }
 
 export function cdnReplaceDomain(url: string, domain?: string): string {
-  if(!domain) {
-    domain = "https://mcdn.vrporn.com/";
+  if (!domain) {
+    domain = 'https://mcdn.vrporn.com/';
   }
 
   const urlPart = urlParse(url);
