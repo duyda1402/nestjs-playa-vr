@@ -7,7 +7,11 @@ import { CommonService } from '../common/common.service';
 
 @Controller('')
 export class VideoController {
-  constructor(private readonly videoService: VideoService, private readonly opensearchService: OpenSearchService, private readonly commonService: CommonService) {}
+  constructor(
+    private readonly videoService: VideoService,
+    private readonly opensearchService: OpenSearchService,
+    private readonly commonService: CommonService
+  ) {}
 
   @Get('/test')
   async getView() {
@@ -16,7 +20,7 @@ export class VideoController {
   }
   @Get('/test2')
   async getView2() {
-    const view = await this.commonService.convert2CdnUrl([1503396,1503395,1503394, 679289]);
+    const view = await this.commonService.convert2CdnUrl([1503396, 1503395, 1503394, 679289]);
     return view;
   }
 

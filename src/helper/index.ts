@@ -6,7 +6,7 @@ export function convertTimeToSeconds(timeString: string) {
 }
 
 export function isProduction(): boolean {
-  return false;//For test
+  return false; //For test
 
   return process.env.NODE_ENV === 'production';
 }
@@ -16,9 +16,9 @@ export function arrayPluck(arr: any[], field: string): any[] {
 }
 
 export function appendCdnDomain(path: string): string {
-    return `https://mcdn.vrporn.com/${path}`;
+  return `https://mcdn.vrporn.com/${path}`;
 }
 
 export function getTableWithPrefix(table: string): string {
-    return `wp_rkr3j35p5r_${table}`;
+  return `wp_rkr3j35p5r_${table}`;
 }

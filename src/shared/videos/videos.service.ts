@@ -5,7 +5,7 @@ import { PostMetaEntity } from 'src/entities/post_meta.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
 import { unserialize } from 'php-serialize';
-import { IFPage, IFVideoListView, QueryBody } from 'src/types';
+import { IFPage, IFVideoListView } from 'src/types';
 import { IFVideoView } from 'src/types/index';
 import { Repository } from 'typeorm';
 import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
@@ -14,6 +14,7 @@ import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { convertTimeToSeconds } from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from '../open-search/opensearch.service';
+import { CommonService } from './../common/common.service';
 
 @Injectable()
 export class VideoService {
@@ -22,8 +23,8 @@ export class VideoService {
     private readonly postRepository: Repository<PostEntity>,
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
-
-    private readonly opensearchService: OpenSearchService
+    private readonly opensearchService: OpenSearchService,
+    private readonly commonService: CommonService
   ) {}
 
   async getVideoList(query: {
@@ -43,7 +44,7 @@ export class VideoService {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order =
       query.order === 'popularity' ? 'popularity' : query.order === 'release_date' ? 'post.postDate' : 'postName';
-
+    const start = Date.now();
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -69,12 +70,9 @@ export class VideoService {
         .andWhere('taxoActoer.taxonomy = "porn_star_name"')
         .andWhere('termActor.name LIKE :charNameActor', { charNameActor: `%${paramActor}%` });
     //=============== Lấy ảnh
-    queryVideo
-      .leftJoinAndSelect(PostMetaEntity, 'pm', 'post.id = pm.postId AND pm.metaKey = :metaThumbKey', {
-        metaThumbKey: '_thumbnail_id',
-      })
-      .leftJoinAndSelect(PostEntity, 'p', 'p.id = pm.metaValue')
-      .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue');
+    queryVideo.leftJoinAndSelect(PostMetaEntity, 'pm', 'post.id = pm.postId AND pm.metaKey = :metaThumbKey', {
+      metaThumbKey: '_thumbnail_id',
+    });
 
     //====================== Tìm thời gian phát video trailer
     queryVideo
@@ -101,15 +99,15 @@ export class VideoService {
           fullAttachKey: '_wp_attachment_metadata',
         }
       );
+
     const dataPromis = queryVideo
       .select([
+        'pm.metaValue as thumbnail_id',
         'termStudio.name as subtitle',
         'post.id as id',
         'post.postName as postName',
         'post.postTitle as postTitle',
         'post.postDate as postDate',
-        'ai.path as path',
-        'p.guid as path_guid',
         'pm_attach_trailer.metaValue as infoTrailer',
         'pm_attach_full.metaValue as infoFull',
       ])
@@ -127,14 +125,16 @@ export class VideoService {
 
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    console.log(data);
+    console.log(Date.now() - start);
 
+    const thumbnailIds = data.map((v) => Number(v.thumbnail_id));
+    const paths = await this.commonService.convert2CdnUrl(thumbnailIds);
     const content = data.map((video: any) => {
       return {
         id: video?.id,
         title: video?.postTitle,
         subtitle: video?.subtitle,
-        preview_image: video?.path ? `https://mcdn.vrporn.com/${video?.path}` : video?.path_guid,
+        preview_image: paths[video?.thumbnail_id],
         release_date: new Date(video?.postDate).getTime(),
         details: this.getInfoDetailsVideo(video?.infoTrailer, video?.infoFull),
       };
@@ -148,6 +148,7 @@ export class VideoService {
     };
     return result;
   }
+
   async getVideoDetail(postId: string): Promise<IFVideoView | null> {
     const result = await this.postRepository
       .createQueryBuilder('post')
@@ -229,7 +230,12 @@ export class VideoService {
       .getRawMany();
     const viewsPromise = this.opensearchService.getPostViews(Number(postId));
 
-    const [studio, categories, actors, views] = await Promise.all([studioPromise, categoriesPromise, actorsPromise, viewsPromise]);
+    const [studio, categories, actors, views] = await Promise.all([
+      studioPromise,
+      categoriesPromise,
+      actorsPromise,
+      viewsPromise,
+    ]);
 
     return {
       id: result?.id.toString(),

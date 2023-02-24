@@ -1,39 +1,54 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
-import {InjectDataSource} from "@nestjs/typeorm";
-import {appendCdnDomain, getTableWithPrefix} from "../../helper";
-import {unserialize} from "php-serialize";
+import { DataSource, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { appendCdnDomain, getTableWithPrefix } from '../../helper';
+import { unserialize } from 'php-serialize';
+import { As3cfItemsEntity } from './../../entities/as3cf_items.entity';
+import { PostMetaEntity } from './../../entities/post_meta.entity';
 
 @Injectable()
 export class CommonService {
   constructor(
     @InjectDataSource()
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @InjectRepository(As3cfItemsEntity)
+    private readonly as3cfItemRepository: Repository<As3cfItemsEntity>,
+    @InjectRepository(PostMetaEntity)
+    private readonly postMetaRepository: Repository<PostMetaEntity>
   ) {}
 
   async execQuery(query: string, params?: any): Promise<any> {
     return await this.dataSource.query(query, params);
   }
 
-  async convert2CdnUrl(ids: number[]):Promise<any> {
-    //Load from s3 table by source;
-    const s3Table = getTableWithPrefix('as3cf_items');
-    const rows = await this.execQuery(`SELECT source_id as id, path FROM ${s3Table} WHERE source_id IN(?)`, [ids]);
+  async convert2CdnUrl(ids: number[]): Promise<any> {
+    const rows = await this.as3cfItemRepository
+      .createQueryBuilder('as3cf')
+      .select(['as3cf.sourceId as sourceId, as3cf.path as sourcekey'])
+      .where('as3cf.sourceId IN (:...sourceId)', { sourceId: ids })
+      .getRawMany();
 
-    let itemMap = {};
-    rows.forEach((v) => {itemMap[v.id] = appendCdnDomain(v.path)});
+    const itemMap = {};
+    //conver ary to obj
+    rows.forEach((v: any) => {
+      itemMap[v.sourceId] = appendCdnDomain(v.sourcekey);
+    });
 
+    const mIds = ids.filter((v) => !itemMap[v]);
 
-    const mIds = ids.filter(v => !itemMap[v]);
+    if (mIds.length) {
+      const metaRows = await this.postMetaRepository
+        .createQueryBuilder('postMeta')
+        .select(['postMeta.postId as id', 'postMeta.metaValue as value'])
+        .where('postMeta.metaKey = "amazonS3_info"')
+        .andWhere('postMeta.postId IN (:mIds)', { mIds: mIds })
+        .getRawMany();
 
-    if(mIds.length) {//Load from amazonS3_info meta key
-      const postMetaTable = getTableWithPrefix('postmeta');
-      const metaRows = await this.execQuery(`SELECT post_id as id, meta_value as value FROM ${postMetaTable} WHERE meta_key = 'amazonS3_info' AND post_id IN(?)`, [mIds]);
       metaRows.forEach((v) => {
-          const mv = unserialize(v.value);
-          if(mv['key']) {
-            itemMap[v.id] = appendCdnDomain(mv['key']);
-          }
+        const mv = unserialize(v.value);
+        if (mv['key']) {
+          itemMap[v.id] = appendCdnDomain(mv['key']);
+        }
       });
     }
 
