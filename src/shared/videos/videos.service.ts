@@ -251,7 +251,10 @@ export class VideoService {
       categories: categories,
       actors: actors,
       views: views,
-      details: this.getVideoDetailsInfoWithLinks(result.id, result?.infoTrailer, result?.infoFull),
+      details: this.getVideoDetailsInfoWithLinks(result.id, {
+        infoTrailer: result?.infoTrailer || null,
+        infoFull: result?.infoFull || null,
+      }),
     };
   }
 
@@ -286,15 +289,16 @@ export class VideoService {
     return details;
   }
 
-  getVideoDetailsInfoWithLinks(videoId: number, infoTrailer: string | null, infoFull: string | null) {
+  getVideoDetailsInfoWithLinks(videoId: number, data: { infoTrailer: string | null; infoFull: string | null }) {
     const details = [];
-    const trailer = infoTrailer ? unserialize(infoTrailer) : null;
-    const timeTrailer =
-        trailer && trailer['length']
-            ? Number(trailer['length'])
-            : trailer['length_formatted']
-                ? convertTimeToSeconds(trailer['length_formatted'])
-                : null;
+    const trailer = data.infoTrailer ? unserialize(data.infoTrailer) : null;
+    const timeTrailer = trailer
+        ? trailer?.length
+            ? Number(trailer?.length)
+            : trailer?.length_formatted
+                ? convertTimeToSeconds(trailer?.length_formatted)
+                : null
+        : null;
 
     const userLevel = 0;//Dựa vào token để xác định
     const videoData = this.commonService.loadVideosData(videoId);
@@ -305,13 +309,14 @@ export class VideoService {
         duration_seconds: timeTrailer,
         links: this.commonService.buildVideoLinks('trailer', videoData, userLevel)
       });
-    const full = infoFull ? unserialize(infoFull) : null;
-    const timeFull =
-        full && full['length']
-            ? Number(full['length'])
-            : full['length_formatted']
-                ? convertTimeToSeconds(full['length_formatted'])
-                : null;
+    const full = data.infoFull ? unserialize(data.infoFull) : null;
+    const timeFull = full
+        ? full?.length
+            ? Number(full?.length)
+            : full?.length_formatted
+                ? convertTimeToSeconds(full?.length_formatted)
+                : null
+        : null;
     if (timeFull)
       details.push({
         type: 'full',
