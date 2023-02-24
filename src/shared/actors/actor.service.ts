@@ -10,8 +10,8 @@ import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
-import { TopPornstarsEntity } from 'src/entities/top_pornstar.entity';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
+import { OpenSearchService } from './../open-search/opensearch.service';
 
 @Injectable()
 export class ActorService {
@@ -21,7 +21,8 @@ export class ActorService {
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
     @InjectRepository(PostEntity)
-    private readonly postRepository: Repository<PostEntity>
+    private readonly postRepository: Repository<PostEntity>,
+    private readonly spenSearchService: OpenSearchService
   ) {}
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
@@ -128,14 +129,15 @@ export class ActorService {
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.id')
       .where('tr.termId = :termId', { termId: actor.id })
       .getMany();
-    const [properties, studios, actorInfo, posts] = await Promise.all([
+    const [properties, studios, actorInfo] = await Promise.all([
       propertiesPromise,
       studiosPromise,
       actorPromise,
       postsPromise,
     ]);
-    const arrPostId = posts ? posts.map((item) => Number(item.id)) : [];
-    //count_view
+
+    // count_view;
+    const views = await this.spenSearchService.getTermViews(actor.id);
     return {
       id: actorInfo?.slug,
       title: actorInfo?.name,
@@ -145,7 +147,7 @@ export class ActorService {
       studios: studios,
       properties: properties,
       aliases: ['Felix Argyle', 'Blue Knight', 'Ferri-chan'],
-      views: 500,
+      views: views,
       banner: actorInfo?.path_banner
         ? `https://mcdn.vrporn.com/${actorInfo?.path_banner}`
         : actorInfo?.path_banner_post,

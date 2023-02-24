@@ -38,21 +38,18 @@ export class CommonService {
       .select(['as3cf.sourceId as sourceId, as3cf.path as sourcekey'])
       .where('as3cf.sourceId IN (:...sourceId)', { sourceId: ids })
       .getRawMany();
-
     const itemMap = {};
     //conver ary to obj
     rows.forEach((v: any) => {
       itemMap[v.sourceId] = appendCdnDomain(v.sourcekey);
     });
-
     const mIds = ids.filter((v) => !itemMap[v]);
-
     if (mIds.length) {
       const metaRows = await this.postMetaRepository
         .createQueryBuilder('postMeta')
         .select(['postMeta.postId as id', 'postMeta.metaValue as value'])
         .where('postMeta.metaKey = "amazonS3_info"')
-        .andWhere('postMeta.postId IN (:mIds)', { mIds: mIds })
+        .andWhere('postMeta.postId IN (:...mIds)', { mIds: mIds })
         .getRawMany();
 
       metaRows.forEach((v) => {
@@ -62,7 +59,18 @@ export class CommonService {
         }
       });
     }
-
+    const m2Ids = ids.filter((v) => !itemMap[v]);
+    if (m2Ids.length) {
+      const postRows = await this.postRepository
+        .createQueryBuilder('post')
+        .where('post.postType = "attachment"')
+        .select(['post.id as id', 'post.guid as value'])
+        .andWhere('post.id IN (:...m2Ids)', { m2Ids: m2Ids })
+        .getRawMany();
+      postRows.forEach((v) => {
+        itemMap[v.id] = appendCdnDomain(v?.value);
+      });
+    }
     return itemMap;
   }
 
