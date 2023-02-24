@@ -10,7 +10,7 @@ export class VideoController {
 
   @Get('/test')
   async getView() {
-    const view = await this.opensearchService.countByQuery([1426287]);
+    const view = await this.opensearchService.getTermViews(632);
     return view;
   }
 

@@ -4,3 +4,9 @@ export function convertTimeToSeconds(timeString: string) {
   const seconds = parseInt(parts[1], 10);
   return minutes * 60 + seconds;
 }
+
+export function isProduction(): boolean {
+  return false;//For test
+
+  return process.env.NODE_ENV === 'production';
+}

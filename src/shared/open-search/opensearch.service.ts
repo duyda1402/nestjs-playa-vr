@@ -1,25 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { OpensearchClient, InjectOpensearchClient } from 'nestjs-opensearch';
+import {TermTaxonomyEntity} from "../../entities/term_taxonomy.entity";
+import {TermRelationShipsBasicEntity} from "../../entities/term_relationships_basic.entity";
+import {Repository} from "typeorm";
+import {PostEntity} from "../../entities/post.entity";
+import {count} from "rxjs";
+import {isProduction} from "../../helper";
 
 @Injectable()
 export class OpenSearchService {
   constructor(
     @InjectOpensearchClient()
-    private readonly opensearchService: OpensearchClient
+    private readonly opensearchService: OpensearchClient,
+
+    private readonly postRepository: Repository<PostEntity>,
   ) {}
 
-  async countByQuery(pids: number[], condQuery?: any[], env?: string): Promise<number> {
+
+  async countByQuery(condQuery: any[]): Promise<number> {
     const query = {
       size: 0,
       query: {
         bool: {
-          must: [
-            {
-              terms: {
-                id: pids,
-              },
-            },
-          ],
+          must: [],
         },
       },
       aggs: {
@@ -30,18 +33,46 @@ export class OpenSearchService {
         },
       },
     };
-    if (Array.isArray(condQuery) && condQuery.length) {
-      condQuery.forEach((cond) => {
-        query.query.bool.must.push(cond);
-      });
-    }
-    const prefix = env === 'production' ? 'prod' : 'staging';
+
+    condQuery.forEach((cond) => {
+      query.query.bool.must.push(cond);
+    });
+
+    const prefix = isProduction() ? 'prod' : 'staging';
     const { body } = await this.opensearchService.search({
       index: `${prefix}-analytics-report`,
       body: query,
     });
-    //     if (body?.aggregations?.stats?.value) return body?.aggregations?.stats?.value;
+
     console.log(body);
     return body?.aggregations?.stats?.value || 0;
+  }
+
+  async getPostViews(pid: number): Promise<number> {
+      return 0;
+  }
+  async getTermViews(tid: number): Promise<number> {
+    const rows = await this.postRepository
+        .createQueryBuilder('post')
+        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.ID')
+        .innerJoin(TermRelationShipsBasicEntity, 'tr2', 'tr2.objectId = post.ID')
+        .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
+        .andWhere('tr2.termId = :termId', { termId: 251 })
+        .andWhere('tr.termId = :termId', { termId: tid })
+        .select(['post.ID as id'])
+        .getRawMany();
+
+    let pids = [];
+    if(Array.isArray(rows)) {
+      rows.forEach((v) => {
+        pids.push(v.id);
+      });
+    }
+
+    return await this.countByQuery([{
+          terms: {
+            id: pids
+          }
+        }]);
   }
 }
