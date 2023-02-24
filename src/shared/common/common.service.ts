@@ -55,17 +55,46 @@ export class CommonService {
     return itemMap;
   }
 
-  async loadVideosData(ids: number[], userLevel: 0 | 1 | 2): Promise<any> {//User Level: 0: Non-Login, 1: Logged-in, 2: Premium
-    let videoDataMap = {};
-    let videoFields: string[] = [
-      'video', 'full_size_video_file_paid_sd', 'smartphone_sample', 'smartphone_paid', 'oculus_sample', 'oculus_paid',
-      'vive_sample', 'vive_paid', 'gear_vr_sample', 'gear_vr_paid', 'daydream_vr_sample', 'daydream_vr_paid', 'psvr_sample', 'psvr_paid', 'short_video',
-      'full_size_video_file', 'free_4k_streaming', 'full_size_video_file_paid', 'paid_4k_streaming', 'original_free', 'original_paid',
-      'free_embed_video_2d_sd', 'free_embed_video_2d_hd', 'free_embed_video_2d_4k', 'free_embed_video_2d_5k', 'free_embed_video_Original',
-      'paid_embed_video_2d_sd', 'paid_embed_video_2d_hd', 'paid_embed_video_2d_4k', 'paid_embed_video_2d_5k', 'paid_embed_video_original',
-      'free_embed_video_5k', 'paid_embed_video_5k', 'free_5k_download', 'paid_5k_download'
+  async loadVideosData(ids: number[], userLevel: 0 | 1 | 2): Promise<any> {
+    //User Level: 0: Non-Login, 1: Logged-in, 2: Premium
+    const videoDataMap = {};
+    const videoFields: string[] = [
+      'video',
+      'full_size_video_file_paid_sd',
+      'smartphone_sample',
+      'smartphone_paid',
+      'oculus_sample',
+      'oculus_paid',
+      'vive_sample',
+      'vive_paid',
+      'gear_vr_sample',
+      'gear_vr_paid',
+      'daydream_vr_sample',
+      'daydream_vr_paid',
+      'psvr_sample',
+      'psvr_paid',
+      'short_video',
+      'full_size_video_file',
+      'free_4k_streaming',
+      'full_size_video_file_paid',
+      'paid_4k_streaming',
+      'original_free',
+      'original_paid',
+      'free_embed_video_2d_sd',
+      'free_embed_video_2d_hd',
+      'free_embed_video_2d_4k',
+      'free_embed_video_2d_5k',
+      'free_embed_video_Original',
+      'paid_embed_video_2d_sd',
+      'paid_embed_video_2d_hd',
+      'paid_embed_video_2d_4k',
+      'paid_embed_video_2d_5k',
+      'paid_embed_video_original',
+      'free_embed_video_5k',
+      'paid_embed_video_5k',
+      'free_5k_download',
+      'paid_5k_download',
     ];
-
 
     return videoDataMap;
   }
