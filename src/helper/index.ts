@@ -1,6 +1,5 @@
 import * as urlParse from "url-parse";
 import * as md5 from "crypto-js/md5";
-import * as path from "path";
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -23,23 +22,23 @@ export function appendCdnDomain(path: string): string {
 }
 
 export function getDownloadId(downloadUrl: string): number {
-  if(!isNaN(Number(downloadUrl))) {
+  if (!isNaN(Number(downloadUrl))) {
     return Number(downloadUrl);
   }
 
   const parts = downloadUrl.split('/');
   let len = parts.length - 1;
 
-  if(parts[len] === '') {
-     len--;
+  if (parts[len] === '') {
+    len--;
   }
 
   return Number(parts[len]);
 }
 
 export function cdnReplaceDomain(url: string, domain?: string): string {
-  if(!domain) {
-    domain = "https://mcdn.vrporn.com/";
+  if (!domain) {
+    domain = 'https://mcdn.vrporn.com/';
   }
 
   const urlPart = urlParse(url);
@@ -95,30 +94,3 @@ export function signCdnUrl(url: string): string {
 export function getTableWithPrefix(table: string): string {
   return `wp_rkr3j35p5r_${table}`;
 }
-
-
-// $link = "";
-// if (isset($parts['path']) && $parts['path'] !== null) {
-//   $link = $parts['path'];
-// }
-//
-// $str_to_sign = $link;
-//
-// if (isset($parts['query']) && $parts['query'] !== null) {
-//   $parts['query'] .= "&";
-// } else {
-//   $parts['query'] = "";
-// }
-// $parts['query'] .= $provider->getExpirationParamName() . "=" .$provider->getExpiration();
-// $str_to_sign .= '?'.$parts['query'];
-// $link .= "?".$parts['query'];
-//
-// $str_to_sign .= '&' . $provider->getSignatureParamName() . '='. $provider->getSharedSecret();
-// $signature = md5($str_to_sign);
-// $link .= '&' . $provider->getTokenParamName() . '=' . $signature;
-//
-// $ret = $parts['scheme']."://".$parts['host'];
-// if (isset($parts['port']) && $parts['port'] !== null) {
-//   $ret .= ':'.$parts['port'];
-// }
-// $ret .= $link;

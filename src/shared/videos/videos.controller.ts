@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
@@ -56,8 +56,8 @@ export class VideoController {
     };
   }
   @Get('/video/:id')
-  async getStudiDetail(@Param('id') id: string): Promise<IFRsp<IFVideoView>> {
-    const result = await this.videoService.getVideoDetail(id);
+  async getStudiDetail(@Param('id') postId: string, @Body('access_token') token: string): Promise<IFRsp<IFVideoView>> {
+    const result = await this.videoService.getVideoDetail(postId, token);
     return { status: { code: 1, message: 'okey' }, data: result };
   }
 }
