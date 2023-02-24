@@ -4,6 +4,7 @@ import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from '../common/common.service';
+import {cdnReplaceDomain, getDownloadId} from "../../helper";
 
 @Controller('')
 export class VideoController {
@@ -15,8 +16,12 @@ export class VideoController {
 
   @Get('/test')
   async getView() {
-    const view = await this.opensearchService.getTermViews(632);
-    return view;
+    console.log("https://vrporn.com/download/679269/".split('/'))
+    console.log(getDownloadId("https://vrporn.com/download/679269/"))
+    console.log(Number("679269"))
+    cdnReplaceDomain("files/20200323095113/vrporncom_badoinkvr_new_years_lay_sde.mp4?expires=1677409308&amp;token=2bd6675e356416d442ef3c83119505d9");
+    // const view = await this.opensearchService.getTermViews(632);
+    return 0;
   }
   @Get('/test2')
   async getView2() {

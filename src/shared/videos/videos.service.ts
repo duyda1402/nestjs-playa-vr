@@ -248,7 +248,7 @@ export class VideoService {
       categories: categories,
       actors: actors,
       views: views,
-      details: this.getInfoDetailsVideo(result?.infoTrailer, result?.infoFull),
+      details: this.getVideoDetailsInfoWithLinks(result.id, result?.infoTrailer, result?.infoFull),
     };
   }
 
@@ -261,6 +261,7 @@ export class VideoService {
         : trailer['length_formatted']
         ? convertTimeToSeconds(trailer['length_formatted'])
         : null;
+
     if (timeTrailer)
       details.push({
         type: 'trailer',
@@ -277,6 +278,41 @@ export class VideoService {
       details.push({
         type: 'full',
         duration_seconds: timeFull,
+      });
+    return details;
+  }
+
+  getVideoDetailsInfoWithLinks(videoId: number, infoTrailer: string | null, infoFull: string | null) {
+    const details = [];
+    const trailer = infoTrailer ? unserialize(infoTrailer) : null;
+    const timeTrailer =
+        trailer && trailer['length']
+            ? Number(trailer['length'])
+            : trailer['length_formatted']
+                ? convertTimeToSeconds(trailer['length_formatted'])
+                : null;
+
+    const userLevel = 0;//Dựa vào token để xác định
+    const videoData = this.commonService.loadVideosData(videoId);
+
+    if (timeTrailer)
+      details.push({
+        type: 'trailer',
+        duration_seconds: timeTrailer,
+        links: this.commonService.buildVideoLinks('trailer', videoData, userLevel)
+      });
+    const full = infoFull ? unserialize(infoFull) : null;
+    const timeFull =
+        full && full['length']
+            ? Number(full['length'])
+            : full['length_formatted']
+                ? convertTimeToSeconds(full['length_formatted'])
+                : null;
+    if (timeFull)
+      details.push({
+        type: 'full',
+        duration_seconds: timeFull,
+        links: this.commonService.buildVideoLinks('full', videoData, userLevel)
       });
     return details;
   }

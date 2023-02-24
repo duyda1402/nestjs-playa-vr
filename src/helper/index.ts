@@ -1,3 +1,4 @@
+import * as urlParse from "url-parse";
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -17,6 +18,31 @@ export function arrayPluck(arr: any[], field: string): any[] {
 
 export function appendCdnDomain(path: string): string {
   return `https://mcdn.vrporn.com/${path}`;
+}
+
+export function getDownloadId(downloadUrl: string): number {
+  if(!isNaN(Number(downloadUrl))) {
+    return Number(downloadUrl);
+  }
+
+  const parts = downloadUrl.split('/');
+  let len = parts.length - 1;
+
+  if(parts[len] === '') {
+     len--;
+  }
+
+  return Number(parts[len]);
+}
+
+export function cdnReplaceDomain(url: string, domain?: string): string {
+  if(!domain) {
+    domain = "https://mcdn.vrporn.com/";
+  }
+
+  const urlPart = urlParse(url);
+
+  return `${domain}${urlPart?.pathname}`;
 }
 
 export function getTableWithPrefix(table: string): string {
