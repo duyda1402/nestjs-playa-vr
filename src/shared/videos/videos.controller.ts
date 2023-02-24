@@ -2,11 +2,11 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
-import { MyOpenSearchService } from '../open-search/opensearch.service';
+import { OpenSearchService } from '../open-search/opensearch.service';
 
 @Controller('')
 export class VideoController {
-  constructor(private readonly videoService: VideoService, private readonly opensearchService: MyOpenSearchService) {}
+  constructor(private readonly videoService: VideoService, private readonly opensearchService: OpenSearchService) {}
 
   @Get('/test')
   async getView() {
