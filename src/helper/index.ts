@@ -10,3 +10,11 @@ export function isProduction(): boolean {
 
   return process.env.NODE_ENV === 'production';
 }
+
+export function arrayPluck(arr: any[], field: string): any[] {
+  return arr.map((v) => v[field]);
+}
+
+export function getTableWithPrefix(table: string): string {
+    return `wp_rkr3j35p5r_${table}`;
+}
