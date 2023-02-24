@@ -3,15 +3,16 @@ import { OpensearchClient, InjectOpensearchClient } from 'nestjs-opensearch';
 import {TermRelationShipsBasicEntity} from "../../entities/term_relationships_basic.entity";
 import {Repository} from "typeorm";
 import {PostEntity} from "../../entities/post.entity";
-import {count} from "rxjs";
 import {isProduction} from "../../helper";
+import {InjectRepository} from "@nestjs/typeorm";
 
 @Injectable()
-export class MyOpenSearchService {
+export class OpenSearchService {
   constructor(
     @InjectOpensearchClient()
     private readonly opensearchService: OpensearchClient,
 
+    @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
   ) {}
 
