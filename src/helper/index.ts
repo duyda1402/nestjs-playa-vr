@@ -1,4 +1,6 @@
 import * as urlParse from "url-parse";
+import * as md5 from "crypto-js/md5";
+import * as path from "path";
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -42,9 +44,81 @@ export function cdnReplaceDomain(url: string, domain?: string): string {
 
   const urlPart = urlParse(url);
 
-  return `${domain}${urlPart?.pathname}`;
+  return `${domain}${urlPart?.pathname}${urlPart.query}`;
+}
+
+export function signCdnUrl(url: string): string {
+  if(!url) {
+    return url;
+  }
+
+  const urlParts: any = urlParse(url);
+  let link = "", signStr = "";
+
+  const TTL = 172800;
+  const secretKey = "h6stZuj5TJeEA2EZZnLJ+ERNHnxkIKJVu532irLr";
+  const now = Math.round(Date.now() / 1000);
+
+  if(urlParts.pathname) {
+    link = urlParts.pathname;
+  }
+
+  signStr = link;
+  if(urlParts.query) {
+    urlParts.query += "&";
+  } else {
+    urlParts.query = "";
+  }
+
+  urlParts.query += `expires=${now + TTL}`;
+
+  link += `?${urlParts.query}`;
+  signStr += `?${urlParts.query}`;
+
+  signStr += `&secret=${secretKey}`;
+
+  const signature = md5(signStr);
+
+  link += `&token=${signature}`;
+
+  let signedUrl = `${urlParts.protocol}//${urlParts.hostname}`;
+
+  if(urlParts.port) {
+    signedUrl += `:${urlParts.port}`;
+  }
+
+  signedUrl += link;
+
+  return signedUrl;
 }
 
 export function getTableWithPrefix(table: string): string {
   return `wp_rkr3j35p5r_${table}`;
 }
+
+
+// $link = "";
+// if (isset($parts['path']) && $parts['path'] !== null) {
+//   $link = $parts['path'];
+// }
+//
+// $str_to_sign = $link;
+//
+// if (isset($parts['query']) && $parts['query'] !== null) {
+//   $parts['query'] .= "&";
+// } else {
+//   $parts['query'] = "";
+// }
+// $parts['query'] .= $provider->getExpirationParamName() . "=" .$provider->getExpiration();
+// $str_to_sign .= '?'.$parts['query'];
+// $link .= "?".$parts['query'];
+//
+// $str_to_sign .= '&' . $provider->getSignatureParamName() . '='. $provider->getSharedSecret();
+// $signature = md5($str_to_sign);
+// $link .= '&' . $provider->getTokenParamName() . '=' . $signature;
+//
+// $ret = $parts['scheme']."://".$parts['host'];
+// if (isset($parts['port']) && $parts['port'] !== null) {
+//   $ret .= ':'.$parts['port'];
+// }
+// $ret .= $link;
