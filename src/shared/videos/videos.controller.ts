@@ -15,7 +15,7 @@ export class VideoController {
   }
   @Get('/test2')
   async getView2() {
-    const view = await this.opensearchService.getPostViews(1237052);
+    const view = await this.opensearchService.getPostViews(233960);
     return view;
   }
 
