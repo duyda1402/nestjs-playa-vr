@@ -28,9 +28,9 @@ export class VideoController {
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFVideoListView[]>>> {
     const page = Number(query['page-index']) || 1;
     const perPage = Number(query['page-size']) || 20;
-    const order = query['order'] || '';
+    const order = query['order'] || 'title';
     const direction = query['direction'] || 'asc';
-    const title = query['title'] || '';
+    const title = query['title'] || null;
     const studio = query['studio'] || null;
     const actor = query['actor'] || null;
     const includedCategories = query['included-categories'] ? query['included-categories'].split(',') : [];
