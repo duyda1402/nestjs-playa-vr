@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {InjectDataSource} from "@nestjs/typeorm";
-import {getTableWithPrefix} from "../../helper";
+import {appendCdnDomain, getTableWithPrefix} from "../../helper";
 import {unserialize} from "php-serialize";
 
 @Injectable()
@@ -21,7 +21,7 @@ export class CommonService {
     const rows = await this.execQuery(`SELECT source_id as id, path FROM ${s3Table} WHERE source_id IN(?)`, [ids]);
 
     let itemMap = {};
-    rows.forEach((v) => {itemMap[v.id] = v.path});
+    rows.forEach((v) => {itemMap[v.id] = appendCdnDomain(v.path)});
 
 
     const mIds = ids.filter(v => !itemMap[v]);
@@ -32,7 +32,7 @@ export class CommonService {
       metaRows.forEach((v) => {
           const mv = unserialize(v.value);
           if(mv['key']) {
-            itemMap[v.id] = mv['key'];
+            itemMap[v.id] = appendCdnDomain(mv['key']);
           }
       });
     }
