@@ -4,6 +4,7 @@ import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from '../common/common.service';
+import * as uslParse from 'url-parse';
 
 @Controller('')
 export class VideoController {
@@ -15,7 +16,8 @@ export class VideoController {
 
   @Get('/test')
   async getView() {
-    const view = await this.opensearchService.getTermViews(632);
+    // const view = await this.opensearchService.getTermViews(632);
+    const view = uslParse('https://github.com/foo/bar');
     return view;
   }
   @Get('/test2')

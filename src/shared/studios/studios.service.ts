@@ -10,6 +10,7 @@ import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { DataNotFoundException } from 'src/exceptions/data.exception';
 import { IFStudioListView, IFStudioView, IFPage, QueryBody } from 'src/types';
 import { Repository } from 'typeorm';
+import { OpenSearchService } from './../open-search/opensearch.service';
 
 @Injectable()
 export class StudiosService {
@@ -17,7 +18,8 @@ export class StudiosService {
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(PostEntity)
-    private readonly postRepository: Repository<PostEntity>
+    private readonly postRepository: Repository<PostEntity>,
+    private readonly openSearchService: OpenSearchService
   ) {}
 
   async getStudioList(query: QueryBody): Promise<IFPage<IFStudioListView[]>> {
@@ -127,19 +129,14 @@ export class StudiosService {
       ])
       .getRawOne();
     if (!studio) throw new DataNotFoundException('Studio not found');
-    const posts = await this.postRepository
-      .createQueryBuilder('post')
-      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.id')
-      .where('tr.termId = :termId', { termId: studio.id })
-      .getMany();
-    const arrPostId = posts ? posts.map((item) => Number(item.id)) : [];
-    // count view
+
+    const views = await this.openSearchService.getTermViews(studio.id);
     return {
       id: studio?.slug,
       title: studio?.name,
       preview: studio?.path_as3 ? `https://mcdn.vrporn.com/${studio?.path_as3}` : studio?.path_guid,
       description: studio?.description,
-      views: 100,
+      views: views,
     };
   }
   private strQuery = `IF(tm.metaValue REGEXP '^[0-9]+$', tm.metaValue, IF(JSON_VALID(tm.metaValue), JSON_UNQUOTE(JSON_EXTRACT(CAST(tm.metaValue AS CHAR), '$.original_image')), ''))`;

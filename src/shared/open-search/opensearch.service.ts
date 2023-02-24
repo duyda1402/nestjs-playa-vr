@@ -47,8 +47,6 @@ export class OpenSearchService {
       body: query,
     });
 
-    // console.log(`${prefix}-analytics-report`, JSON.stringify(query));
-    // console.log(body);
     return body?.aggregations?.stats?.value || 0;
   }
 
@@ -61,6 +59,7 @@ export class OpenSearchService {
       },
     ]);
   }
+
   async getTermViews(tid: number): Promise<number> {
     const rows = await this.postRepository
       .createQueryBuilder('post')
@@ -72,7 +71,7 @@ export class OpenSearchService {
       .select(['post.ID as id'])
       .getRawMany();
 
-    let pids = [];
+    const pids = [];
     if (Array.isArray(rows)) {
       rows.forEach((v) => {
         pids.push(v.id);
