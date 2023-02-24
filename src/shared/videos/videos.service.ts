@@ -13,6 +13,7 @@ import { TermEntity } from 'src/entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { convertTimeToSeconds } from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
+import { OpenSearchService } from '../open-search/opensearch.service';
 
 @Injectable()
 export class VideoService {
@@ -20,7 +21,9 @@ export class VideoService {
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
     @InjectRepository(TermEntity)
-    private readonly termRepository: Repository<TermEntity>
+    private readonly termRepository: Repository<TermEntity>,
+
+    private readonly opensearchService: OpenSearchService
   ) {}
 
   async getVideoList(query: {
@@ -199,6 +202,7 @@ export class VideoService {
       ])
       .getRawOne();
     if (!result) throw new DataNotFoundException('Studio not found');
+
     const studioPromise = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -223,7 +227,9 @@ export class VideoService {
       .andWhere('tr.objectId = :objectId', { objectId: result.id })
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
-    const [studio, categories, actors] = await Promise.all([studioPromise, categoriesPromise, actorsPromise]);
+    const viewsPromise = this.opensearchService.getPostViews(Number(postId));
+
+    const [studio, categories, actors, views] = await Promise.all([studioPromise, categoriesPromise, actorsPromise, viewsPromise]);
 
     return {
       id: result?.id.toString(),
@@ -235,7 +241,7 @@ export class VideoService {
       studio: studio,
       categories: categories,
       actors: actors,
-      views: 500,
+      views: views,
       details: this.getInfoDetailsVideo(result?.infoTrailer, result?.infoFull),
     };
   }
