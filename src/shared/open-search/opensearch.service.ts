@@ -49,7 +49,11 @@ export class OpenSearchService {
   }
 
   async getPostViews(pid: number): Promise<number> {
-      return 0;
+    return await this.countByQuery([{
+            term: {
+              id: pid
+            }
+          }]);
   }
   async getTermViews(tid: number): Promise<number> {
     const rows = await this.postRepository

@@ -13,6 +13,11 @@ export class VideoController {
     const view = await this.opensearchService.getTermViews(632);
     return view;
   }
+  @Get('/test2')
+  async getView2() {
+    const view = await this.opensearchService.getPostViews(1237052);
+    return view;
+  }
 
   @Get('/videos')
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFVideoListView[]>>> {
