@@ -67,13 +67,13 @@ export function signCdnUrl(url: string): string {
   if (urlParts.query) {
     urlParts.query += '&';
   } else {
-    urlParts.query = '';
+    urlParts.query = '?';
   }
 
   urlParts.query += `expires=${now + TTL}`;
 
-  link += `?${urlParts.query}`;
-  signStr += `?${urlParts.query}`;
+  link += `${urlParts.query}`;
+  signStr += `${urlParts.query}`;
 
   signStr += `&secret=${secretKey}`;
 
