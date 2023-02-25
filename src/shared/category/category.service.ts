@@ -29,10 +29,10 @@ export class CategoryService {
     //   .getRawMany();
     const result = await this.optionsRepository
       .createQueryBuilder('o')
-      .select("SUBSTRING_INDEX(REPLACE('o.name', 'o.options_categories_display_', ''), '_', -1)", 'name')
+      .select(["SUBSTRING_INDEX(REPLACE(o.name, 'options_categories_display_', ''), '_', -1) as name"])
       .addSelect('o.option_value', 'value')
       .addSelect(
-        "CONVERT(SUBSTRING_INDEX(REPLACE('o.name', 'o.options_categories_display_', ''), '_', 1), UNSIGNED INTEGER)",
+        "CONVERT(SUBSTRING_INDEX(REPLACE(o.name, 'options_categories_display_', ''), '_', 1), UNSIGNED INTEGER)",
         'idx'
       )
       .where("o.name LIKE 'options_categories_display_%'")
@@ -47,7 +47,6 @@ export class CategoryService {
       .getRawMany();
 
     const items = [];
-    let currentRow = -1;
     if(Array.isArray(result) && result.length) {
       result.forEach((row) => {
         const currentRow: any = items[row.idx] || {};
@@ -61,7 +60,7 @@ export class CategoryService {
     const thumbnailIds = items.map((v) => parseNumber(v.image));
     const paths = await this.commonService.getImagesUrl(thumbnailIds);
 
-    const content = result.map((item: any) => {
+    const content = items.map((item: any) => {
       const parts = item.url.split('/');
       const slug = parts[parts.length - 2]; // "8k"
       return {
