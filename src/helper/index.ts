@@ -1,5 +1,5 @@
-import * as urlParse from "url-parse";
-import * as md5 from "crypto-js/md5";
+import * as urlParse from 'url-parse';
+import * as md5 from 'crypto-js/md5';
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -47,26 +47,27 @@ export function cdnReplaceDomain(url: string, domain?: string): string {
 }
 
 export function signCdnUrl(url: string): string {
-  if(!url) {
+  if (!url) {
     return url;
   }
 
   const urlParts: any = urlParse(url);
-  let link = "", signStr = "";
+  let link = '',
+    signStr = '';
 
   const TTL = 172800;
-  const secretKey = "h6stZuj5TJeEA2EZZnLJ+ERNHnxkIKJVu532irLr";
+  const secretKey = 'h6stZuj5TJeEA2EZZnLJ+ERNHnxkIKJVu532irLr';
   const now = Math.round(Date.now() / 1000);
 
-  if(urlParts.pathname) {
+  if (urlParts.pathname) {
     link = urlParts.pathname;
   }
 
   signStr = link;
-  if(urlParts.query) {
-    urlParts.query += "&";
+  if (urlParts.query) {
+    urlParts.query += '&';
   } else {
-    urlParts.query = "";
+    urlParts.query = '';
   }
 
   urlParts.query += `expires=${now + TTL}`;
@@ -82,7 +83,7 @@ export function signCdnUrl(url: string): string {
 
   let signedUrl = `${urlParts.protocol}//${urlParts.hostname}`;
 
-  if(urlParts.port) {
+  if (urlParts.port) {
     signedUrl += `:${urlParts.port}`;
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import {appendCdnDomain, cdnReplaceDomain, getDownloadId, getTableWithPrefix, signCdnUrl} from '../../helper';
+import { appendCdnDomain, cdnReplaceDomain, getDownloadId, getTableWithPrefix, signCdnUrl } from '../../helper';
 import { unserialize } from 'php-serialize';
 import { As3cfItemsEntity } from './../../entities/as3cf_items.entity';
 import { PostMetaEntity } from './../../entities/post_meta.entity';
@@ -102,16 +102,17 @@ export class CommonService {
     //Load data for list fields
     const metaRows = await this.postMetaRepository
       .createQueryBuilder('pm')
-      .select(['pm.meta_key as k', 'pm.meta_value as v'])
-      .where('postId = :postId', { postId: videoId })
-      .andWhere('pm.postMeta IN(:metaKeys)', { metaKeys: videoFields })
+      .select(['pm.metaKey as k', 'pm.metaValue as v'])
+      .where('pm.postId = :postId', { postId: videoId })
+      .andWhere('pm.metaKey IN (:...metaKeys)', { metaKeys: videoFields })
       .getRawMany();
 
-    let fieldsMap: any = {},
-      metaValue: any | null = null;
-    metaRows.forEach((row) => {
-      fieldsMap[row.k] = row.v;
-    });
+    const fieldsMap: any = {};
+
+    metaRows[0] &&
+      metaRows.forEach((row) => {
+        fieldsMap[row.k] = row.v;
+      });
 
     videoData.hd_file_format = fieldsMap.vr_file_format || 'STEREO_180_LR';
     videoData.sd_file_format = fieldsMap.vr_sd_file_format || videoData.hd_file_format;
@@ -279,7 +280,10 @@ export class CommonService {
           videoLinks.push({
             is_stream: true,
             is_download: false,
-            url: userLevel < v.ul || type === 'full' ? null : this.streamLink(videoData[`${v.f}${fieldMiddle}_stream`] || null),
+            url:
+              userLevel < v.ul || type === 'full'
+                ? null
+                : this.streamLink(videoData[`${v.f}${fieldMiddle}_stream`] || null),
             unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
             projection: projection,
             stereo: stereo,
@@ -292,7 +296,10 @@ export class CommonService {
           videoLinks.push({
             is_stream: false,
             is_download: true,
-            url: userLevel < v.ul || type === 'full' ? null : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
+            url:
+              userLevel < v.ul || type === 'full'
+                ? null
+                : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
             unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
             projection: projection,
             stereo: stereo,
@@ -307,10 +314,10 @@ export class CommonService {
   }
 
   downloadLink(url: string | null): string {
-    if(url) {
+    if (url) {
       let link = cdnReplaceDomain(url, 'https://mcdnd.vrporn.com');
 
-      if(link) {
+      if (link) {
         link += `?cd=attachment`;
 
         return signCdnUrl(link);
@@ -320,10 +327,10 @@ export class CommonService {
     return url;
   }
   streamLink(url: string | null): string {
-    if(url) {
-      let link = cdnReplaceDomain(url, 'https://mcdne.vrporn.com');
+    if (url) {
+      const link = cdnReplaceDomain(url, 'https://mcdne.vrporn.com');
 
-      if(link) {
+      if (link) {
         return signCdnUrl(link);
       }
     }
@@ -334,11 +341,11 @@ export class CommonService {
   async getVideoMaxQuality(videoId: number): Promise<number> {
     const rows: any[] = await this.termRelationRepository
       .createQueryBuilder('tr')
-      .innerJoin(TermEntity, 't', 't.termId = tr.termTaxonomyId')
+      .innerJoin(TermEntity, 't', 't.id = tr.termId')
       .where('tr.objectId = :videoId', { videoId: videoId })
       .andWhere('LOWER(t.name) IN(:slugs)', { slugs: ['4k', '5k', '6k', '7k', '8k'] })
       .orderBy('t.name', 'DESC')
-      .select(['t.name'])
+      .select(['t.name as name'])
       .getRawMany();
 
     let maxQuality = 0;
@@ -384,7 +391,7 @@ export class CommonService {
   }
 
   async getPostMeta(postId: number | string, metaKey: string): Promise<any> {
-    const metaData: any = this.postMetaRepository
+    const metaData: any = await this.postMetaRepository
       .createQueryBuilder('pm')
       .where('pm.metaKey = :metaKey', { metaKey: metaKey })
       .andWhere('pm.postId = :postId', { postId: postId })
@@ -395,7 +402,7 @@ export class CommonService {
   }
 
   async getS3MetaInfoKey(postId: number): Promise<string> {
-    let metaValue: any | null = this.getPostMeta(postId, 'amazonS3_info');
+    let metaValue: any | null = await this.getPostMeta(postId, 'amazonS3_info');
 
     if (metaValue) {
       metaValue = unserialize(metaValue);

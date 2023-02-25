@@ -237,11 +237,11 @@ export class VideoService {
       .getRawMany();
     const viewsPromise = this.opensearchService.getPostViews(Number(postId));
 
-    const [studio, categories, actors, views] = await Promise.all([
+    const [studio, categories, actors] = await Promise.all([
       studioPromise,
       categoriesPromise,
       actorsPromise,
-      viewsPromise,
+      // viewsPromise,
     ]);
 
     return {
@@ -254,8 +254,8 @@ export class VideoService {
       studio: studio,
       categories: categories,
       actors: actors,
-      views: views,
-      details: this.getVideoDetailsInfoWithLinks(result.id, {
+      views: 100,
+      details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
         infoTrailer: result?.infoTrailer || null,
         infoFull: result?.infoFull || null,
       }),
@@ -293,7 +293,11 @@ export class VideoService {
     return details;
   }
 
-  getVideoDetailsInfoWithLinks(videoId: number, data: { infoTrailer: string | null; infoFull: string | null }) {
+  async getVideoDetailsInfoWithLinks(
+    videoId: number,
+    userLevel: number,
+    data: { infoTrailer: string | null; infoFull: string | null }
+  ) {
     const details = [];
     const trailer = data.infoTrailer ? unserialize(data.infoTrailer) : null;
     const timeTrailer = trailer
@@ -303,15 +307,13 @@ export class VideoService {
         ? convertTimeToSeconds(trailer?.length_formatted)
         : null
       : null;
-
-    const userLevel = 0; //Dựa vào token để xác định
-    const videoData = this.commonService.loadVideosData(videoId);
+    const videoData = await this.commonService.loadVideosData(videoId);
 
     if (timeTrailer)
       details.push({
         type: 'trailer',
         duration_seconds: timeTrailer,
-        links: this.commonService.buildVideoLinks('trailer', videoData, userLevel),
+        links: await this.commonService.buildVideoLinks('trailer', videoData, userLevel),
       });
     const full = data.infoFull ? unserialize(data.infoFull) : null;
     const timeFull = full
@@ -325,7 +327,7 @@ export class VideoService {
       details.push({
         type: 'full',
         duration_seconds: timeFull,
-        links: this.commonService.buildVideoLinks('full', videoData, userLevel),
+        links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
       });
     return details;
   }

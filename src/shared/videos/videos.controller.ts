@@ -5,7 +5,7 @@ import { IFVideoView } from 'src/types/index';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from '../common/common.service';
 import * as uslParse from 'url-parse';
-import {cdnReplaceDomain, signCdnUrl} from "../../helper";
+import { cdnReplaceDomain, signCdnUrl } from '../../helper';
 
 @Controller('')
 export class VideoController {
@@ -18,7 +18,9 @@ export class VideoController {
   @Get('/test')
   async getView() {
     // const view = await this.opensearchService.getTermViews(632);
-    const view = cdnReplaceDomain('files/20200321070501/vrporncom_badoinkvr_new_years_lay_paid_sde.mp4?cd=attachment&expires=1677449526&token=501401c0b55fdaa894681fc2e3a9d59c');
+    const view = cdnReplaceDomain(
+      'files/20200321070501/vrporncom_badoinkvr_new_years_lay_paid_sde.mp4?cd=attachment&expires=1677449526&token=501401c0b55fdaa894681fc2e3a9d59c'
+    );
     return view;
   }
   @Get('/test2')
