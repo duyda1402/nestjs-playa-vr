@@ -41,9 +41,13 @@ export function cdnReplaceDomain(url: string, domain?: string): string {
     domain = 'https://mcdn.vrporn.com';
   }
 
-  const urlPart = urlParse(url);
+  const urlPart: any = urlParse(url);
 
-  return `${domain}/${urlPart?.pathname}${urlPart.query}`;
+  if(urlPart.pathname.substring(0, 1) === '/') {
+    urlPart.pathname = urlPart.pathname.substring(1);
+  }
+
+  return `${domain}/${urlPart.pathname}${urlPart.query}`;
 }
 
 export function signCdnUrl(url: string): string {
