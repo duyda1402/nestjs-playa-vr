@@ -244,7 +244,7 @@ export class CommonService {
 
     const maxQuality = await this.getVideoMaxQuality(videoData.id);
 
-    if (maxQuality) {
+    if (maxQuality && maxQuality > 4) {
       types.push({ quality: `${maxQuality}K`, f: 'original', stream: 0, download: 1, ord: maxQuality * 10 + 5, ul: 2 });
     }
 
