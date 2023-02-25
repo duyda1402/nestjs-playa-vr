@@ -32,7 +32,7 @@ export class CommonService {
     return await this.dataSource.query(query, params);
   }
 
-  async convert2CdnUrl(ids: number[]): Promise<any> {
+  async getImagesUrl(ids: number[]): Promise<any> {
     const rows = await this.as3cfItemRepository
       .createQueryBuilder('as3cf')
       .select(['as3cf.sourceId as sourceId, as3cf.path as sourcekey'])
@@ -59,6 +59,7 @@ export class CommonService {
         }
       });
     }
+
     const m2Ids = ids.filter((v) => !itemMap[v]);
     if (m2Ids.length) {
       const postRows = await this.postRepository
@@ -67,10 +68,12 @@ export class CommonService {
         .select(['post.id as id', 'post.guid as value'])
         .andWhere('post.id IN (:...m2Ids)', { m2Ids: m2Ids })
         .getRawMany();
+
       postRows.forEach((v) => {
         itemMap[v.id] = appendCdnDomain(v?.value);
       });
     }
+
     return itemMap;
   }
 

@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IFActorListView, IFRsp, IFPage } from 'src/types';
 import { ActorService } from './actor.service';
 import { IFActorView } from './../../types/data.type';
+import {parseNumber} from "../../helper";
 
 @Controller('')
 export class ActorsViewController {
@@ -9,11 +10,12 @@ export class ActorsViewController {
 
   @Get('/actors')
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFActorListView[]>>> {
-    const page = Number(query['page-index']) || 1;
-    const perPage = Number(query['page-size']) || 20;
-    const order = query['order'] || '';
+    const page = parseNumber(query['page-index'], 1);
+    const perPage = parseNumber(query['page-size'], 20);
+    const order = query['order'] && ["title", "popularity"].indexOf(query['order']) !== -1 ? query['order'] : "title";
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
+
     const result = await this.actorService.getActorList({
       page,
       perPage,

@@ -99,3 +99,17 @@ export function signCdnUrl(url: string): string {
 export function getTableWithPrefix(table: string): string {
   return `wp_rkr3j35p5r_${table}`;
 }
+
+export function parseNumber(num: any, def?: number) {
+  if(typeof def === 'undefined') {
+    def = 0;
+  }
+
+  const _num = Number(num);
+
+  return !isNaN(_num) ? _num : def;
+}
+
+export function promiseEmpty(): Promise<any> {
+  return new Promise((resolve, reject) => {resolve([]);})
+}

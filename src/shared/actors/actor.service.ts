@@ -12,6 +12,8 @@ import { PostEntity } from 'src/entities/post.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
+import { CommonService } from './../common/common.service';
+import {parseNumber, promiseEmpty} from "../../helper";
 
 @Injectable()
 export class ActorService {
@@ -22,44 +24,58 @@ export class ActorService {
     private readonly termMetaRepository: Repository<TermMetaEntity>,
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
-    private readonly spenSearchService: OpenSearchService
+    private readonly openSearchService: OpenSearchService,
+    private readonly commonService: CommonService,
   ) {}
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
+
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
-      .leftJoinAndSelect(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id')
-      .leftJoinAndSelect(PostEntity, 'post', 'post.id = tm.metaValue')
-      .leftJoinAndSelect(As3cfItemsEntity, 'ai', 'ai.sourceId = tm.metaValue')
-      .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
-      .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
-      .andWhere('tm.metaKey = :metaKey', { metaKey: 'profile_image' });
+      .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
+      .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'profile_image' })
+      .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' });
 
-    const dataPromise = actorQuery
-      .select(['term.slug as slug', 'term.name as name', 'post.guid as path_guid', 'ai.path as path'])
-      .addSelect((subQuery) => {
-        const query = subQuery
-          .select('SUM(pp.premiumPopularScore)', 'result')
-          .from(PopularScoresEntity, 'pp')
-          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
-          .where('tr.termId = term.id');
-        return query;
-      }, 'popularity')
-      .limit(query.perPage)
+    if(query.title) {
+      actorQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
+    }
+
+    actorQuery.select(['term.slug as slug', 'term.name as name', 'tm.metaValue as image_id']);
+
+    if(query.order === 'popularity') {
+      actorQuery.addSelect((subQuery) => {
+        return subQuery.select('SUM(pp.premiumPopularScore)', 'result')
+            .from(PopularScoresEntity, 'pp')
+            .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+            .where('tr.termId = term.id');
+      }, 'popularity');
+    }
+
+    const dataPromise = actorQuery.limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
+
     const countPromise = actorQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-    console.log(data);
+
+    const imageIds = [];
+    data.forEach((item) => {
+      if(item.image_id && !isNaN(Number(item.image_id))) {
+        imageIds.push(Number(item.image_id));
+      }
+    });
+
+    const imageMap = imageIds.length ? await this.commonService.getImagesUrl(imageIds) : {};
+
     const content = data.map((item: any) => ({
       id: item.slug,
       title: item.name,
-      preview: item?.path ? `https://mcdn.vrporn.com/${item?.path}` : item?.path_guid,
+      preview: item.image_id ? (imageMap[item.image_id] || null) : null,
     }));
+
     const result = {
       page_index: query.page,
       item_count: query.perPage,
@@ -77,37 +93,16 @@ export class ActorService {
       .where('term.slug = :slug', { slug })
       .andWhere('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' })
       .getOne();
+
     if (!actor) throw new DataNotFoundException('Actor not found');
-    const actorPromise = this.termRepository
-      .createQueryBuilder('term')
-      .where('term.id = :termImageId', { termImageId: actor.id })
-      //profile_image
-      .leftJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :avatarMetaKey', {
-        avatarMetaKey: 'profile_image',
-      })
-      .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = tm.metaValue')
-      .leftJoin(PostEntity, 'post', 'post.id = tm.metaValue')
-      //top_banner_background
-      .leftJoin(TermMetaEntity, 'tmTow', 'tmTow.termId = term.id AND tmTow.metaKey = :bannerMetaKey', {
-        bannerMetaKey: 'top_banner_background',
-      })
-      .leftJoin(As3cfItemsEntity, 'aiBanner', 'aiBanner.sourceId = tmTow.metaValue')
-      .leftJoin(PostEntity, 'postBanner', 'postBanner.id = tmTow.metaValue')
-      .select([
-        'term.slug as slug',
-        'term.name as name',
-        'post.guid as path_avatar_post',
-        'ai.path as path_avatar',
-        'postBanner.guid as path_banner_post',
-        'aiBanner.path as path_banner',
-      ])
-      .getRawOne();
-    const propertiesPromise = this.termMetaRepository
-      .createQueryBuilder('tm')
-      .select(['tm.metaKey as name', 'tm.metaValue as value'])
-      .where('tm.termId = :termId', { termId: actor.id })
-      .andWhere('tm.metaKey IN (:...metaKey)', { metaKey: this.keys })
-      .getRawMany();
+
+    //Load term meta
+    const metaDataPromise = this.termMetaRepository.createQueryBuilder('tm')
+        .where('tm.termId = :termId', {termId: actor.id})
+        .andWhere('tm.metaKey IN(:...metaKeys)', {metaKeys: this.metaKeys})
+        .select(['tm.metaKey as name', 'tm.metaValue as value'])
+        .getRawMany();
+
     const studiosPromise = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'term.id = tt.termId')
@@ -124,37 +119,64 @@ export class ActorService {
       })
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
-    const postsPromise = this.postRepository
-      .createQueryBuilder('post')
-      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.id')
-      .where('tr.termId = :termId', { termId: actor.id })
-      .getMany();
-    const [properties, studios, actorInfo] = await Promise.all([
-      propertiesPromise,
+
+    const [metaRows, studios] = await Promise.all([
+      metaDataPromise,
       studiosPromise,
-      actorPromise,
-      postsPromise,
     ]);
 
-    // count_view;
-    const views = await this.spenSearchService.getTermViews(actor.id);
+    let imageIds = [], aliasGroup = -1, properties: any[] = [], imageIdMap: any = {};
+    metaRows.forEach((row) => {
+        if(row.name === 'top_banner_background' || row.name === 'profile_image') {
+          const imageId = parseNumber(row.value);
+          if(imageId) {
+            imageIdMap[row.name] = imageId;
+            imageIds.push(imageId);
+          }
+        } else if(row.name === 'alias_group') {
+          aliasGroup = parseNumber(row.value, -1);
+        } else {
+          properties.push(row);
+        }
+    });
+
+    const imagesPromise = imageIds.length ? this.commonService.getImagesUrl(imageIds) : promiseEmpty();
+
+    //Get alias rows
+    const aliasFields = [];
+    if(aliasGroup > 0) {
+      for(let i = 0; i < aliasGroup; i++) {
+        aliasFields.push(`alias_group_${i}_alias_item`);
+      }
+    }
+
+    const aliasGroupPromise = !aliasFields.length ? promiseEmpty() : this.termMetaRepository.createQueryBuilder('tm')
+        .where('tm.termId = :termId', {termId: actor.id})
+        .andWhere('tm.metaKey IN(:...metaKeys)', {metaKeys: aliasFields})
+        .select(['tm.metaValue as value'])
+        .getRawMany();
+
+    const countViewPromise = this.openSearchService.getTermViews(actor.id);
+
+    const [imageMap, aliasItems, views] = await Promise.all([
+      imagesPromise,
+      aliasGroupPromise,
+      countViewPromise,
+    ]);
+
     return {
-      id: actorInfo?.slug,
-      title: actorInfo?.name,
-      preview: actorInfo?.path_avatar
-        ? `https://mcdn.vrporn.com/${actorInfo?.path_avatar}`
-        : actorInfo?.path_avatar_post,
+      id: actor.slug,
+      title: actor.name,
+      preview: imageIdMap.profile_image ? (imageMap[imageIdMap.profile_image] || null) : null,
       studios: studios,
       properties: properties,
-      aliases: ['Felix Argyle', 'Blue Knight', 'Ferri-chan'],
+      aliases: aliasItems.map(v => v.value),
       views: views,
-      banner: actorInfo?.path_banner
-        ? `https://mcdn.vrporn.com/${actorInfo?.path_banner}`
-        : actorInfo?.path_banner_post,
+      banner: imageIdMap.profile_image ? (imageMap[imageIdMap.top_banner_background] || null) : null,
     };
   }
 
-  private keys = [
+  private metaKeys = [
     'birthdate',
     'birthplate',
     'height',
@@ -167,5 +189,8 @@ export class ActorService {
     // 'facebook',
     'ethnicity',
     'country_of_origin',
+    'alias_group',
+    'profile_image',
+    'top_banner_background',
   ];
 }

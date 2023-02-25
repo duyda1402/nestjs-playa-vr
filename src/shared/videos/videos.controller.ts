@@ -25,7 +25,7 @@ export class VideoController {
   }
   @Get('/test2')
   async getView2() {
-    const view = await this.commonService.convert2CdnUrl([1503396, 1503395, 1503394, 679289]);
+    const view = await this.commonService.getImagesUrl([1503396, 1503395, 1503394, 679289]);
     return view;
   }
 

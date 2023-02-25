@@ -45,7 +45,7 @@ export class CategoryService {
       .orderBy('idx')
       .getRawMany();
     const thumbnailIds = result.map((v) => Number(v?.idx));
-    const paths = await this.commonService.convert2CdnUrl(thumbnailIds);
+    const paths = await this.commonService.getImagesUrl(thumbnailIds);
 
     const content = result.map((item: any) => {
       const parts = item.url.split('/');

@@ -130,7 +130,7 @@ export class VideoService {
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
     const thumbnailIds = data.map((v) => Number(v.thumbnail_id));
-    const paths = await this.commonService.convert2CdnUrl(thumbnailIds);
+    const paths = await this.commonService.getImagesUrl(thumbnailIds);
     const content = data.map((video: any) => {
       return {
         id: video?.id,
