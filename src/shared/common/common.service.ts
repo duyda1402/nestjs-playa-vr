@@ -145,10 +145,15 @@ export class CommonService {
         }
       });
 
+      if(!videoData.sd_source) {
+        videoData.sd_source = await this.getS3MetaInfoKey(videoId);
+        videoData.sd_stream = videoData.sd_source;
+      }
+
       //Free HD
       if (fieldsMap.smartphone_sample) {
         videoData.hd_source = await this.getDownloadUrl(fieldsMap.smartphone_sample);
-        videoData.hd_streaming = videoData.hd_source;
+        videoData.hd_stream = videoData.hd_source;
       }
 
       //Paid SD
@@ -160,29 +165,29 @@ export class CommonService {
       //Paid HD
       if (fieldsMap.smartphone_paid) {
         videoData.hd_paid_source = await this.getDownloadUrl(fieldsMap.smartphone_paid);
-        videoData.hd_paid_streaming = videoData.hd_paid_source;
+        videoData.hd_paid_stream = videoData.hd_paid_source;
       }
 
       //Free 4K
       if (fieldsMap.oculus_sample) {
         videoData.four_k_source = await this.getDownloadUrl(fieldsMap.oculus_sample);
-        videoData.four_k_streaming = videoData.four_k_source;
+        videoData.four_k_stream = videoData.four_k_source;
       }
 
       //Paid 4K
       if (fieldsMap.oculus_paid) {
         videoData.four_k_paid_source = await this.getDownloadUrl(fieldsMap.oculus_paid);
-        videoData.four_k_paid_streaming = videoData.four_k_paid_source;
+        videoData.four_k_paid_stream = videoData.four_k_paid_source;
       }
 
       //Free 5K
       if (fieldsMap.free_embed_video_5k) {
-        videoData.five_k_streaming = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_stream = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
       }
 
       //Paid 5K
       if (fieldsMap.free_embed_video_5k) {
-        videoData.five_k_paid_streaming = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
       }
 
       //Free Original
@@ -199,22 +204,22 @@ export class CommonService {
       if (fieldsMap.newts) {
         //Free HD link reload
         if (fieldsMap.full_size_video_file && !isNaN(Number(fieldsMap.smartphone_sample))) {
-          videoData.hd_streaming = await this.getS3MetaInfoKey(fieldsMap.full_size_video_file);
+          videoData.hd_stream = await this.getS3MetaInfoKey(fieldsMap.full_size_video_file);
         }
 
         //Paid HD link reload
         if (fieldsMap.full_size_video_file_paid && !isNaN(Number(fieldsMap.smartphone_paid))) {
-          videoData.hd_paid_streaming = await this.getS3MetaInfoKey(fieldsMap.full_size_video_file_paid);
+          videoData.hd_paid_stream = await this.getS3MetaInfoKey(fieldsMap.full_size_video_file_paid);
         }
 
         //Free 4k link reload
         if (fieldsMap.has_4k_download && fieldsMap.free_4k_streaming) {
-          videoData.four_k_streaming = await this.getS3MetaInfoKey(fieldsMap.free_4k_streaming);
+          videoData.four_k_stream = await this.getS3MetaInfoKey(fieldsMap.free_4k_streaming);
         }
 
         //Paid 4k link reload
         if (fieldsMap.has_4k_download && fieldsMap.paid_4k_streaming) {
-          videoData.four_k_paid_streaming = await this.getS3MetaInfoKey(fieldsMap.paid_4k_streaming);
+          videoData.four_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.paid_4k_streaming);
         }
       }
     }
@@ -276,6 +281,13 @@ export class CommonService {
           });
         }
       } else {
+        let reason = null;
+        if(type === 'full') {
+          reason = 'premium';
+        } else if(v.ul > userLevel) {
+            reason = userLevel == 1 ? 'premium' : 'login';
+        }
+
         if (v.stream) {
           videoLinks.push({
             is_stream: true,
@@ -284,7 +296,7 @@ export class CommonService {
               userLevel < v.ul || type === 'full'
                 ? null
                 : this.streamLink(videoData[`${v.f}${fieldMiddle}_stream`] || null),
-            unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
+            unavailable_reason: reason,
             projection: projection,
             stereo: stereo,
             quality_name: v.quality,
@@ -300,7 +312,7 @@ export class CommonService {
               userLevel < v.ul || type === 'full'
                 ? null
                 : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
-            unavailable_reason: userLevel === 1 || type === 'full' ? 'premium' : 'login',
+            unavailable_reason: reason,
             projection: projection,
             stereo: stereo,
             quality_name: v.quality,
@@ -366,7 +378,7 @@ export class CommonService {
     let downloadUrl = '';
 
     if (!isDownloadVersion) {
-      const metaValue: any = this.getPostMeta(downloadId, '_wp_attached_file');
+      const metaValue: any = await this.getPostMeta(downloadId, '_wp_attached_file');
 
       if (metaValue) {
         downloadUrl = cdnReplaceDomain(metaValue);
@@ -381,9 +393,12 @@ export class CommonService {
         .getRawMany();
 
       childs.forEach((child) => {
-        if (Array.isArray(child._files) && child._files.length) {
-          downloadUrl = child._files[0];
-        }
+        try {
+          const _files = child._files ? JSON.parse(child._files) : [];
+          if (Array.isArray(_files) && _files.length) {
+            downloadUrl = _files[0];
+          }
+        } catch (e: any) {}
       });
     }
 

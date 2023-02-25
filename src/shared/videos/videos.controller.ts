@@ -21,7 +21,7 @@ export class VideoController {
     const view = cdnReplaceDomain(
       'files/20200321070501/vrporncom_badoinkvr_new_years_lay_paid_sde.mp4?cd=attachment&expires=1677449526&token=501401c0b55fdaa894681fc2e3a9d59c'
     );
-    return view;
+    return await this.commonService.loadVideosData(233960);;
   }
   @Get('/test2')
   async getView2() {
