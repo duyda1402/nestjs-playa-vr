@@ -237,11 +237,11 @@ export class VideoService {
       .getRawMany();
     const viewsPromise = this.opensearchService.getPostViews(Number(postId));
 
-    const [studio, categories, actors] = await Promise.all([
+    const [studio, categories, actors, view] = await Promise.all([
       studioPromise,
       categoriesPromise,
       actorsPromise,
-      // viewsPromise,
+      viewsPromise,
     ]);
 
     return {
@@ -254,7 +254,7 @@ export class VideoService {
       studio: studio,
       categories: categories,
       actors: actors,
-      views: 100,
+      views: view,
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
         infoTrailer: result?.infoTrailer || null,
         infoFull: result?.infoFull || null,
