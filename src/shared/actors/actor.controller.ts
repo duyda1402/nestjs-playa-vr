@@ -16,6 +16,11 @@ export class ActorsViewController {
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
 
+    //validate
+    if(perPage > 1000) {
+      return {status: {code: 0, message: 'Page size is too large'}};
+    }
+
     const result = await this.actorService.getActorList({
       page,
       perPage,
