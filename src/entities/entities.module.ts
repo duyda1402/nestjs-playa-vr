@@ -12,6 +12,7 @@ import { TopPornstarsEntity } from './top_pornstar.entity';
 import { As3cfItemsEntity } from './as3cf_items.entity';
 import { SubscriptionEntity } from './subscriptions.entity';
 import { PopularScoresEntity } from './popular_scores.entity';
+import { OptionsEntity } from './options.entity';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PopularScoresEntity } from './popular_scores.entity';
       As3cfItemsEntity,
       SubscriptionEntity,
       PopularScoresEntity,
+      OptionsEntity,
     ]),
   ],
   exports: [
@@ -44,6 +46,7 @@ import { PopularScoresEntity } from './popular_scores.entity';
       As3cfItemsEntity,
       SubscriptionEntity,
       PopularScoresEntity,
+      OptionsEntity,
     ]),
   ],
 })

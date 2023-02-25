@@ -2,17 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
-import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
+import { OptionsEntity } from 'src/entities/options.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CommonService } from '../common/common.service';
 import * as uslParse from 'url-parse';
+import {parseNumber} from "../../helper";
 @Injectable()
 export class CategoryService {
   constructor(
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
-    @InjectRepository(TermEntity)
-    private readonly optionsRepository: Repository<TermEntity>,
+    @InjectRepository(OptionsEntity)
+    private readonly optionsRepository: Repository<OptionsEntity>,
     private readonly commonService: CommonService
   ) {}
 
@@ -28,23 +29,36 @@ export class CategoryService {
     //   .getRawMany();
     const result = await this.optionsRepository
       .createQueryBuilder('o')
-      .select("SUBSTRING_INDEX(REPLACE('o.option_name', 'o.options_categories_display_', ''), '_', -1)", 'name')
+      .select("SUBSTRING_INDEX(REPLACE('o.name', 'o.options_categories_display_', ''), '_', -1)", 'name')
       .addSelect('o.option_value', 'value')
       .addSelect(
-        "CONVERT(SUBSTRING_INDEX(REPLACE('o.option_name', 'o.options_categories_display_', ''), '_', 1), UNSIGNED INTEGER)",
+        "CONVERT(SUBSTRING_INDEX(REPLACE('o.name', 'o.options_categories_display_', ''), '_', 1), UNSIGNED INTEGER)",
         'idx'
       )
-      .where("o.option_name LIKE 'options_categories_display_%'")
+      .where("o.name LIKE 'options_categories_display_%'")
       .andWhere(
         new Brackets((qb) => {
-          qb.where("$wpdb.option_name LIKE '%_name'")
-            .orWhere("$wpdb.option_name LIKE '%_url'")
-            .orWhere("$wpdb.option_name LIKE '%_image'");
+          qb.where("o.name LIKE '%_name'")
+            .orWhere("o.name LIKE '%_url'")
+            .orWhere("o.name LIKE '%_image'");
         })
       )
       .orderBy('idx')
       .getRawMany();
-    const thumbnailIds = result.map((v) => Number(v?.idx));
+
+    const items = [];
+    let currentRow = -1;
+    if(Array.isArray(result) && result.length) {
+      result.forEach((row) => {
+        const currentRow: any = items[row.idx] || {};
+
+        currentRow[row.name] = row.value;
+
+        items[row.idx] = currentRow;
+      });
+    }
+
+    const thumbnailIds = items.map((v) => parseNumber(v.image));
     const paths = await this.commonService.getImagesUrl(thumbnailIds);
 
     const content = result.map((item: any) => {
@@ -53,7 +67,7 @@ export class CategoryService {
       return {
         id: slug,
         title: item.name,
-        preview: paths[item.idx],
+        preview: item.image ? (paths[item.image] || null) : null,
       };
     });
 
