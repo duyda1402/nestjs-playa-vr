@@ -5,7 +5,7 @@ import { IFVideoView } from 'src/types/index';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from '../common/common.service';
 import * as uslParse from 'url-parse';
-import { cdnReplaceDomain, signCdnUrl } from '../../helper';
+import {cdnReplaceDomain, parseNumber, signCdnUrl} from '../../helper';
 
 @Controller('')
 export class VideoController {
@@ -31,15 +31,20 @@ export class VideoController {
 
   @Get('/videos')
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFVideoListView[]>>> {
-    const page = Number(query['page-index']) || 1;
-    const perPage = Number(query['page-size']) || 20;
-    const order = query['order'] || 'title';
+    const page = parseNumber(query['page-index'], 1);
+    const perPage = parseNumber(query['page-size'], 20);
+    const order = query['order'] && ["title", "release_date", "popularity"].indexOf(query['order']) !== -1 ? query['order'] : "title";
     const direction = query['direction'] || 'asc';
     const title = query['title'] || null;
     const studio = query['studio'] || null;
     const actor = query['actor'] || null;
     const includedCategories = query['included-categories'] ? query['included-categories'].split(',') : [];
     const excludedCategories = query['excluded-categories'] ? query['excluded-categories'].split(',') : [];
+
+    //validate
+    if(perPage > 1000) {
+      return {status: {code: 0, message: 'Page size is too large'}};
+    }
 
     const result = await this.videoService.getVideoList({
       page,

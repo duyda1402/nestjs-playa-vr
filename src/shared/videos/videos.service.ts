@@ -11,17 +11,20 @@ import { Repository } from 'typeorm';
 import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
-import { convertTimeToSeconds } from 'src/helper';
+import {convertTimeToSeconds, parseNumber, promiseEmpty} from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { UserService } from '../user/user.service';
+import * as SqlString from "sqlstring";
 
 @Injectable()
 export class VideoService {
   constructor(
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
+    @InjectRepository(PostMetaEntity)
+    private readonly postMetaRepository: Repository<PostMetaEntity>,
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     private readonly opensearchService: OpenSearchService,
@@ -44,114 +47,149 @@ export class VideoService {
     const paramStudio = query.studio ? query.studio : null;
     const paramTitle = query.title ? query.title : null;
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
-    const order =
-      query.order === 'popularity' ? 'popularity' : query.order === 'release_date' ? 'post.postDate' : 'post.postName';
-    console.log(query.page, query.perPage);
+    const order = query.order === 'popularity' ? 'pp.premiumPopularScore' : (query.order === 'release_date' ? 'release_date' : 'post.postName');
+
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
+      .leftJoin(PopularScoresEntity, 'pp', 'pp.postId = post.id')
       //=================  lọc điều kiện video
       .where('post.postType = "post" AND post.postStatus = "publish"')
       .andWhere('tr.termId = :termRelationId', { termRelationId: 251 });
+
     if (paramTitle) {
       queryVideo.andWhere('post.postTitle LIKE :videoName', { videoName: `%${paramTitle}%` });
     }
     //======== Lấy studio gán subtitle
     queryVideo
       .innerJoin(TermRelationShipsBasicEntity, 'trStudio', 'post.id = trStudio.objectId')
-      .leftJoin(TermEntity, 'termStudio', 'termStudio.id = trStudio.termId')
-      .leftJoin(TermTaxonomyEntity, 'taxoStudio', 'taxoStudio.termId = termStudio.id')
+      .innerJoin(TermEntity, 'termStudio', 'termStudio.id = trStudio.termId')
+      .innerJoin(TermTaxonomyEntity, 'taxoStudio', 'taxoStudio.termId = termStudio.id')
       .andWhere('taxoStudio.taxonomy = "studio"');
+
     //======== Lọc theo studio
     if (paramStudio) {
       queryVideo.andWhere('termStudio.name LIKE :charNameStudio', { charNameStudio: `%${paramStudio}%` });
     }
     //==== Lọc theo actor
     if (paramActor) {
-      queryVideo
-        .innerJoin(TermRelationShipsBasicEntity, 'trActor', 'post.id = trActor.objectId')
-        .leftJoin(TermEntity, 'termActor', 'termActor.id = trActor.termId')
-        .leftJoin(TermTaxonomyEntity, 'taxoActoer', 'taxoActoer.termId = termActor.id')
-        .andWhere('taxoActoer.taxonomy = "porn_star_name"')
-        .andWhere('termActor.name LIKE :charNameActor', { charNameActor: `%${paramActor}%` });
+      const subQuery = this.termRepository.createQueryBuilder('t')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
+          .where(`t.name LIKE :actorLike`, {actorLike: `%${paramActor}%`})
+          .select(['tr.objectId as pid']).getQueryAndParameters();
+
+        queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
     }
-    //=============== Lấy ảnh
-    queryVideo.leftJoinAndSelect(PostMetaEntity, 'pm', 'post.id = pm.postId AND pm.metaKey = :metaThumbKey', {
-      metaThumbKey: '_thumbnail_id',
-    });
-    //====================== Tìm thời gian phát video trailer
-    queryVideo
-      .leftJoin(PostMetaEntity, 'pm_trailer', 'post.id = pm_trailer.postId AND pm_trailer.metaKey = :trailerKey', {
-        trailerKey: 'video',
-      })
-      .leftJoin(
-        PostMetaEntity,
-        'pm_attach_trailer',
-        'pm_attach_trailer.postId = pm_trailer.metaValue AND pm_attach_trailer.metaKey = :trailerAttachKey',
-        {
-          trailerAttachKey: '_wp_attachment_metadata',
-        }
-      )
-      //====================== Tìm thời gian phát video full
-      .leftJoin(PostMetaEntity, 'pm_full', 'post.id = pm_full.postId AND pm_full.metaKey = :fullKey', {
-        fullKey: 'full_size_video_file_paid_sd',
-      })
-      .leftJoin(
-        PostMetaEntity,
-        'pm_attach_full',
-        'pm_attach_full.postId = pm_full.metaValue AND pm_attach_full.metaKey = :fullAttachKey',
-        {
-          fullAttachKey: '_wp_attachment_metadata',
-        }
-      )
-      .select([
-        'pm.metaValue as thumbnail_id',
-        'termStudio.name as subtitle',
+
+    if(Array.isArray(query.includedCategories) && query.includedCategories.length) {
+      const subQuery2 = this.termRepository.createQueryBuilder('t')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
+          .where(`t.slug IN(:...slugs)`, {slugs: query.includedCategories})
+          .select(['tr.objectId as pid']).getQueryAndParameters();
+
+      queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery2[0], subQuery2[1])})`);
+    }
+
+    if(Array.isArray(query.excludedCategories) && query.excludedCategories.length) {
+      const subQuery3 = this.termRepository.createQueryBuilder('t')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
+          .where(`t.slug IN(:...slugs)`, {slugs: query.excludedCategories})
+          .select(['tr.objectId as pid']).getQueryAndParameters();
+
+      queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
+    }
+    queryVideo.select([
         'post.id as id',
         'post.postName as postName',
+        'termStudio.name as subtitle',
         'post.postTitle as postTitle',
-        'post.postDate as postDate',
-        'pm_attach_trailer.metaValue as infoTrailer',
-        'pm_attach_full.metaValue as infoFull',
+        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ]);
 
     const dataPromis = queryVideo
-      .addSelect((subQuery) => {
-        const query = subQuery
-          .select('SUM(pp.premiumPopularScore)', 'result')
-          .from(PopularScoresEntity, 'pp')
-          .where('pp.postId = post.id');
-        return query;
-      }, 'popularity')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
+
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    const thumbnailIds = data.map((v) => Number(v.thumbnail_id));
-    const paths = await this.commonService.getImagesUrl(thumbnailIds);
-    const content = data.map((video: any) => {
-      return {
-        id: video?.id,
-        title: video?.postTitle,
-        subtitle: video?.subtitle,
-        preview_image: paths[video?.thumbnail_id],
-        release_date: new Date(video?.postDate).getTime(),
-        details: this.getInfoDetailsVideo({
-          infoTrailer: video?.infoTrailer || null,
-          infoFull: video?.infoFull || null,
-        }),
-      };
-    });
-    const result = {
+
+    let content = [];
+
+    if(Array.isArray(data) && data.length) {
+      const videoIds = data.map((v) => v.id);
+
+      const metaRows = await this.postMetaRepository.createQueryBuilder('pm')
+          .where('pm.metaKey IN(:...metaKeys)', {metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd']})
+          .andWhere('pm.postId IN(:...ids)', {ids: videoIds})
+          .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
+          .getRawMany();
+
+      const imageIds = [];
+      const attachmentIds = [];
+      const metaMap = {};
+
+      metaRows.forEach((v) => {
+        if(!metaMap[v.id]) metaMap[v.id] = {};
+
+        const attachmentId = parseNumber(v.mv);
+
+        if(v.mk === '_thumbnail_id') {
+          metaMap[v.id].image_id = attachmentId;
+
+          if(attachmentId) imageIds.push(attachmentId);
+
+        } else {
+          if(attachmentId) attachmentIds.push(attachmentId);
+
+          metaMap[v.id][v.mk === 'video' ? 'trailer_id' : 'full_id'] = attachmentId;
+        }
+      });
+
+      //Load preview images
+      const imagesPromise = imageIds.length ? this.commonService.getImagesUrl(imageIds) : promiseEmpty({});
+      //Load attachment meta data;
+      const attachementDataPromise = attachmentIds.length ? this.postMetaRepository.createQueryBuilder('pm')
+          .where('pm.metaKey = "_wp_attachment_metadata"')
+          .andWhere('pm.postId IN(:...ids)', {ids: attachmentIds})
+          .select(['pm.postId as id', 'pm.metaValue as value'])
+          .getRawMany() : promiseEmpty([]);
+
+      const [imagesMap, attachementDataRows] = await Promise.all([imagesPromise, attachementDataPromise]);
+
+      const attachmentDataMap = {};
+      attachementDataRows.forEach((v) => {
+        attachmentDataMap[v.id] = v.value;
+      });
+
+      content = data.map((video: any) => {
+        const metaData = metaMap[video.id] || {};
+
+        return {
+          id: video?.id,
+          title: video?.postTitle,
+          subtitle: video?.subtitle,
+          preview_image: metaData.image_id ? (imagesMap[metaData.image_id] || null) : null,
+          release_date: video.release_date ? Math.round(new Date(video.release_date).getTime() / 1000) : 0,
+          details: this.getInfoDetailsVideo({
+            infoTrailer: metaData.trailer_id ? (attachmentDataMap[metaData.trailer_id] || null) : null,
+            infoFull: metaData.full_id ? (attachmentDataMap[metaData.full_id] || null) : null,
+          }),
+        };
+      });
+    }
+
+    return {
       page_index: query.page,
       item_count: query.perPage,
       page_total: Math.ceil(count / query.perPage),
       item_total: count,
       content: content,
     };
-    return result;
   }
 
   async getVideoDetail(postId: string, token: string): Promise<IFVideoView | null> {

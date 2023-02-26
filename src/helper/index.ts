@@ -110,6 +110,8 @@ export function parseNumber(num: any, def?: number) {
   return !isNaN(_num) ? _num : def;
 }
 
-export function promiseEmpty(): Promise<any> {
-  return new Promise((resolve, reject) => {resolve([]);})
+export function promiseEmpty(value?: any): Promise<any> {
+  value = typeof value === 'undefined' ? null : value;
+
+  return new Promise((resolve, reject) => {resolve(value);});
 }
