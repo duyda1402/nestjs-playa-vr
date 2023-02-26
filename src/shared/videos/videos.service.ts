@@ -194,60 +194,27 @@ export class VideoService {
 
   async getVideoDetail(postId: string, token: string): Promise<IFVideoView | null> {
     const userLevel = await this.userService.getUserLevel(token);
-    console.log(userLevel);
+
     const result = await this.postRepository
       .createQueryBuilder('post')
-      .leftJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
-      .leftJoin(PostMetaEntity, 'pm', 'post.id = pm.postId')
-      .leftJoin(As3cfItemsEntity, 'ai', 'ai.sourceId = pm.metaValue')
-      .leftJoin(PostEntity, 'p', 'p.id = pm.metaValue')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
+      .leftJoin(PopularScoresEntity, 'pp', 'pp.postId = post.id')
+      .where('post.id = :postId', { postId: postId })
       .andWhere('post.postType = :postType', { postType: 'post' })
       .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
-      .where('post.id = :postId', { postId: postId })
       .andWhere('tr.termId = :termId', { termId: 251 })
-      .andWhere('pm.metaKey = :metaKey', { metaKey: '_thumbnail_id' })
-      .innerJoin(TermRelationShipsBasicEntity, 'trs', 'post.id = trs.objectId')
-      .leftJoinAndSelect(TermTaxonomyEntity, 'ttStudio', 'trs.termId = ttStudio.termId')
-      .leftJoinAndSelect(TermEntity, 'termStudio', 'termStudio.id = ttStudio.termId')
-      .andWhere('ttStudio.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      //====================== Tìm thời gian phát video trailer
-      .leftJoin(PostMetaEntity, 'pm_trailer', 'post.id = pm_trailer.postId AND pm_trailer.metaKey = :trailerKey', {
-        trailerKey: 'video',
-      })
-      .leftJoin(
-        PostMetaEntity,
-        'pm_attach_trailer',
-        'pm_attach_trailer.postId = pm_trailer.metaValue AND pm_attach_trailer.metaKey = :trailerAttachKey',
-        {
-          trailerAttachKey: '_wp_attachment_metadata',
-        }
-      )
-      //====================== Tìm thời gian phát video full
-      .leftJoin(PostMetaEntity, 'pm_full', 'post.id = pm_full.postId AND pm_full.metaKey = :fullKey', {
-        fullKey: 'full_size_video_file_paid_sd',
-      })
-      .leftJoin(
-        PostMetaEntity,
-        'pm_attach_full',
-        'pm_attach_full.postId = pm_full.metaValue AND pm_attach_full.metaKey = :fullAttachKey',
-        {
-          fullAttachKey: '_wp_attachment_metadata',
-        }
-      )
       .select([
-        'termStudio.name as subtitle',
         'post.id as id',
         'post.postName as postName',
         'post.postTitle as postTitle',
         'post.postContent as postContent',
-        'post.postDate as postDate',
-        'ai.path as path',
-        'p.guid as path_guid',
-        'pm_attach_trailer.metaValue as infoTrailer',
-        'pm_attach_full.metaValue as infoFull',
+        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
       .getRawOne();
-    if (!result) throw new DataNotFoundException('Studio not found');
+
+    if (!result) throw new DataNotFoundException('Video not found');
+
+    const videoId = Number(result.id);
 
     const studioPromise = this.termRepository
       .createQueryBuilder('term')
@@ -257,6 +224,7 @@ export class VideoService {
       .andWhere('tr.objectId = :objectId', { objectId: result.id })
       .select(['term.slug as id', 'term.name as title'])
       .getRawOne();
+
     const categoriesPromise = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -265,6 +233,7 @@ export class VideoService {
       .andWhere('tr.objectId = :objectId', { objectId: result.id })
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
+
     const actorsPromise = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -273,29 +242,64 @@ export class VideoService {
       .andWhere('tr.objectId = :objectId', { objectId: result.id })
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
+
     const viewsPromise = this.opensearchService.getPostViews(Number(postId));
 
-    const [studio, categories, actors, view] = await Promise.all([
+    const metaRows = await this.postMetaRepository.createQueryBuilder('pm')
+        .where('pm.metaKey IN(:...metaKeys)', {metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd']})
+        .andWhere('pm.postId = :id', {id: videoId})
+        .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
+        .getRawMany();
+
+    const metaMap: any = {};
+
+    metaRows.forEach((v) => {
+      const attachmentId = parseNumber(v.mv);
+
+      if(v.mk === '_thumbnail_id') {
+        metaMap.image_id = attachmentId;
+      } else {
+        metaMap[v.mk === 'video' ? 'trailer_id' : 'full_id'] = attachmentId;
+      }
+    });
+
+    //Load preview images
+    const imagesPromise = metaMap.image_id ? this.commonService.getImagesUrl([metaMap.image_id]) : promiseEmpty({});
+    //Load attachment meta data;
+    const attachementDataPromise = this.postMetaRepository.createQueryBuilder('pm')
+        .where('pm.metaKey = "_wp_attachment_metadata"')
+        .andWhere('pm.postId IN(:...ids)', {ids: [metaMap.trailer_id, metaMap.full_id]})
+        .select(['pm.postId as id', 'pm.metaValue as value'])
+        .getRawMany();
+
+    const [studio, categories, actors, view, imagesMap, attachementDataRows] = await Promise.all([
       studioPromise,
       categoriesPromise,
       actorsPromise,
       viewsPromise,
+      imagesPromise,
+      attachementDataPromise,
     ]);
+
+    const attachmentDataMap = {};
+    attachementDataRows.forEach((v) => {
+      attachmentDataMap[v.id] = v.value;
+    });
 
     return {
       id: result?.id.toString(),
       title: result?.postTitle.toString(),
-      subtitle: result?.subtitle,
+      subtitle: studio?.title,
       description: result?.postContent.toString(),
-      preview_image: result?.path ? `https://mcdn.vrporn.com/${result?.path}` : result?.path_guid,
-      release_date: result?.postDate,
+      preview_image: metaMap.image_id ? (imagesMap[metaMap.image_id] || null) : null,
+      release_date: result.release_date ? Math.round(new Date(result.release_date).getTime() / 1000) : 0,
       studio: studio,
       categories: categories,
       actors: actors,
       views: view,
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
-        infoTrailer: result?.infoTrailer || null,
-        infoFull: result?.infoFull || null,
+        infoTrailer: metaMap.trailer_id ? (attachmentDataMap[metaMap.trailer_id] || null) : null,
+        infoFull: metaMap.full_id ? (attachmentDataMap[metaMap.full_id] || null) : null,
       }),
     };
   }

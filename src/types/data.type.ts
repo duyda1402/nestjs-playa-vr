@@ -24,7 +24,7 @@ export interface IFVideoView {
   subtitle: string;
   description: string;
   preview_image: Url;
-  release_date: Date;
+  release_date: number;
   studio: IFVideoViewStudio;
   categories: IFVideoViewCategory[];
   actors: IFVideoViewActor[];
