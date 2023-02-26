@@ -32,6 +32,8 @@ export class ActorService {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
 
+    //Cache here: cache_key = `actor_list_data:${md5(queryObject)}`, cache_data = {count, content}
+
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -87,6 +89,8 @@ export class ActorService {
   }
 
   async getActorDetail(slug: string): Promise<IFActorView | null> {
+    //Cache here: cache_key = `actor_detail_data:${slug}`, cache_data = {responseData}
+
     const actor = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')

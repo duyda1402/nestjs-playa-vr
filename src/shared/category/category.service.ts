@@ -27,6 +27,9 @@ export class CategoryService {
     //   .andWhere('tm.metaKey = :metaKey', { metaKey: 'color_background' })
     //   .select(['term.id as id', 'term.slug as slug', 'term.name as name', 'tm.metaValue as meta'])
     //   .getRawMany();
+
+    //Cache here: cache_key = `categories_data`, cache_data = {content}
+
     const result = await this.optionsRepository
       .createQueryBuilder('o')
       .select(["SUBSTRING_INDEX(REPLACE(o.name, 'options_categories_display_', ''), '_', -1) as name"])

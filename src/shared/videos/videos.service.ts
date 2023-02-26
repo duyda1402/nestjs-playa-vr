@@ -49,6 +49,8 @@ export class VideoService {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'pp.premiumPopularScore' : (query.order === 'release_date' ? 'release_date' : 'post.postName');
 
+    //Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
+
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -194,6 +196,8 @@ export class VideoService {
 
   async getVideoDetail(postId: string, token: string): Promise<IFVideoView | null> {
     const userLevel = await this.userService.getUserLevel(token);
+
+    //Cache here: cache_key = `video_detail_data:${postId}`, cache_data = {result, studio, categories, actors, view, imagesMap, attachmentDataMap}
 
     const result = await this.postRepository
       .createQueryBuilder('post')

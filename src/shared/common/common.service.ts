@@ -78,6 +78,8 @@ export class CommonService {
   }
 
   async loadVideosData(videoId: number): Promise<any> {
+    //Cache here: cache_key = `video_data_cache:${videoId}`, cache_data = {videoData}
+
     const videoData: any = { id: videoId, four_k_paid_source: '', sd_source: '' };
 
     const videoFields: string[] = [

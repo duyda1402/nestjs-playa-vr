@@ -31,6 +31,8 @@ export class StudiosService {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
 
+      //Cache here: cache_key = `studio_list_data:${md5(queryObject)}`, cache_data = {content, count}
+
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -104,6 +106,8 @@ export class StudiosService {
   }
 
   async getStudioDetail(slug: string): Promise<IFStudioView | null> {
+      //Cache here: cache_key = `studio_detail_data:${slug}`, cache_data = {responseData}
+
     const studio = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id AND tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
