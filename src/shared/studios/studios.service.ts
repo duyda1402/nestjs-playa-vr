@@ -117,7 +117,6 @@ export class StudiosService {
 
   async getStudioDetail(slug: string): Promise<IFStudioView | null> {
     //Cache here: cache_key = `studio_detail_data:${slug}`, cache_data = {responseData}
-
     const keyCache = generateKeyCache('studio_detail_data', { slug });
     const cachedStudio = this.cache.get(keyCache);
     if (cachedStudio && cachedStudio.expiresAt > Date.now() && validatedKeyCache(keyCache, { slug })) {
