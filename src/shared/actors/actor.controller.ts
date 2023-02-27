@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IFActorListView, IFRsp, IFPage } from 'src/types';
 import { ActorService } from './actor.service';
 import { IFActorView } from './../../types/data.type';
-import {parseNumber} from "../../helper";
+import { parseNumber } from '../../helper';
 
 @Controller('')
 export class ActorsViewController {
@@ -10,15 +10,15 @@ export class ActorsViewController {
 
   @Get('/actors')
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFActorListView[]>>> {
-    const page = parseNumber(query['page-index'], 1);
+    const page = parseNumber(query['page-index'], 0);
     const perPage = parseNumber(query['page-size'], 20);
-    const order = query['order'] && ["title", "popularity"].indexOf(query['order']) !== -1 ? query['order'] : "title";
+    const order = query['order'] && ['title', 'popularity'].indexOf(query['order']) !== -1 ? query['order'] : 'title';
     const direction = query['direction'] || 'asc';
     const title = query['title'] || '';
 
     //validate
-    if(perPage > 1000) {
-      return {status: {code: 0, message: 'Page size is too large'}};
+    if (perPage > 1000) {
+      return { status: { code: 0, message: 'Page size is too large' } };
     }
 
     const result = await this.actorService.getActorList({

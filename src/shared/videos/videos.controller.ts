@@ -5,7 +5,7 @@ import { IFVideoView } from 'src/types/index';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from '../common/common.service';
 import * as uslParse from 'url-parse';
-import {cdnReplaceDomain, parseNumber, signCdnUrl} from '../../helper';
+import { cdnReplaceDomain, parseNumber, signCdnUrl } from '../../helper';
 
 @Controller('')
 export class VideoController {
@@ -21,7 +21,7 @@ export class VideoController {
     const view = cdnReplaceDomain(
       'files/20200321070501/vrporncom_badoinkvr_new_years_lay_paid_sde.mp4?cd=attachment&expires=1677449526&token=501401c0b55fdaa894681fc2e3a9d59c'
     );
-    return await this.commonService.loadVideosData(233960);;
+    return await this.commonService.loadVideosData(233960);
   }
   @Get('/test2')
   async getView2() {
@@ -33,7 +33,10 @@ export class VideoController {
   async getActors(@Query() query: any): Promise<IFRsp<IFPage<IFVideoListView[]>>> {
     const page = parseNumber(query['page-index'], 1);
     const perPage = parseNumber(query['page-size'], 20);
-    const order = query['order'] && ["title", "release_date", "popularity"].indexOf(query['order']) !== -1 ? query['order'] : "title";
+    const order =
+      query['order'] && ['title', 'release_date', 'popularity'].indexOf(query['order']) !== -1
+        ? query['order']
+        : 'title';
     const direction = query['direction'] || 'asc';
     const title = query['title'] || null;
     const studio = query['studio'] || null;
@@ -42,8 +45,8 @@ export class VideoController {
     const excludedCategories = query['excluded-categories'] ? query['excluded-categories'].split(',') : [];
 
     //validate
-    if(perPage > 1000) {
-      return {status: {code: 0, message: 'Page size is too large'}};
+    if (perPage > 1000) {
+      return { status: { code: 0, message: 'Page size is too large' } };
     }
 
     const result = await this.videoService.getVideoList({

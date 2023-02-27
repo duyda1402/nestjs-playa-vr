@@ -7,25 +7,24 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
-import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
-import {parseNumber, promiseEmpty} from "../../helper";
+import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
 
 @Injectable()
 export class ActorService {
+  private cache: Map<string, { data: any; expiresAt: number }> = new Map<string, { data: any; expiresAt: number }>();
   constructor(
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
     @InjectRepository(PostEntity)
-    private readonly postRepository: Repository<PostEntity>,
     private readonly openSearchService: OpenSearchService,
-    private readonly commonService: CommonService,
+    private readonly commonService: CommonService
   ) {}
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
@@ -33,29 +32,41 @@ export class ActorService {
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
 
     //Cache here: cache_key = `actor_list_data:${md5(queryObject)}`, cache_data = {count, content}
-
+    const keyCache = generateKeyCache('actor_list_data', query);
+    const cachedActors = this.cache.get(keyCache);
+    if (cachedActors && cachedActors.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
+      return {
+        page_index: query.page,
+        item_count: query.perPage,
+        page_total: Math.ceil(cachedActors.data.count / query.perPage),
+        item_total: cachedActors.data.count,
+        content: cachedActors.data.content,
+      };
+    }
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'profile_image' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' });
 
-    if(query.title) {
+    if (query.title) {
       actorQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
 
     actorQuery.select(['term.slug as slug', 'term.name as name', 'tm.metaValue as image_id']);
 
-    if(query.order === 'popularity') {
+    if (query.order === 'popularity') {
       actorQuery.addSelect((subQuery) => {
-        return subQuery.select('SUM(pp.premiumPopularScore)', 'result')
-            .from(PopularScoresEntity, 'pp')
-            .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
-            .where('tr.termId = term.id');
+        return subQuery
+          .select('SUM(pp.premiumPopularScore)', 'result')
+          .from(PopularScoresEntity, 'pp')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+          .where('tr.termId = term.id');
       }, 'popularity');
     }
 
-    const dataPromise = actorQuery.limit(query.perPage)
+    const dataPromise = actorQuery
+      .limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
@@ -65,7 +76,7 @@ export class ActorService {
 
     const imageIds = [];
     data.forEach((item) => {
-      if(item.image_id && !isNaN(Number(item.image_id))) {
+      if (item.image_id && !isNaN(Number(item.image_id))) {
         imageIds.push(Number(item.image_id));
       }
     });
@@ -75,22 +86,27 @@ export class ActorService {
     const content = data.map((item: any) => ({
       id: item.slug,
       title: item.name,
-      preview: item.image_id ? (imageMap[item.image_id] || null) : null,
+      preview: item.image_id ? imageMap[item.image_id] || null : null,
     }));
 
-    const result = {
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3000 });
+
+    return {
       page_index: query.page,
       item_count: query.perPage,
       page_total: Math.ceil(count / query.perPage),
       item_total: count,
       content: content,
     };
-    return result;
   }
 
   async getActorDetail(slug: string): Promise<IFActorView | null> {
     //Cache here: cache_key = `actor_detail_data:${slug}`, cache_data = {responseData}
-
+    const keyCache = generateKeyCache('actor_detail_data', { slug });
+    const cachedActor = this.cache.get(keyCache);
+    if (cachedActor && cachedActor.expiresAt > Date.now() && validatedKeyCache(keyCache, { slug })) {
+      return cachedActor.data.responseData;
+    }
     const actor = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
@@ -101,11 +117,12 @@ export class ActorService {
     if (!actor) throw new DataNotFoundException('Actor not found');
 
     //Load term meta
-    const metaDataPromise = this.termMetaRepository.createQueryBuilder('tm')
-        .where('tm.termId = :termId', {termId: actor.id})
-        .andWhere('tm.metaKey IN(:...metaKeys)', {metaKeys: this.metaKeys})
-        .select(['tm.metaKey as name', 'tm.metaValue as value'])
-        .getRawMany();
+    const metaDataPromise = this.termMetaRepository
+      .createQueryBuilder('tm')
+      .where('tm.termId = :termId', { termId: actor.id })
+      .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: this.metaKeys })
+      .select(['tm.metaKey as name', 'tm.metaValue as value'])
+      .getRawMany();
 
     const studiosPromise = this.termRepository
       .createQueryBuilder('term')
@@ -124,60 +141,61 @@ export class ActorService {
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
 
-    const [metaRows, studios] = await Promise.all([
-      metaDataPromise,
-      studiosPromise,
-    ]);
+    const [metaRows, studios] = await Promise.all([metaDataPromise, studiosPromise]);
 
-    let imageIds = [], aliasGroup = -1, properties: any[] = [], imageIdMap: any = {};
+    const imageIds = [];
+    let aliasGroup = -1;
+    const properties: any[] = [];
+    const imageIdMap: any = {};
+
     metaRows.forEach((row) => {
-        if(row.name === 'top_banner_background' || row.name === 'profile_image') {
-          const imageId = parseNumber(row.value);
-          if(imageId) {
-            imageIdMap[row.name] = imageId;
-            imageIds.push(imageId);
-          }
-        } else if(row.name === 'alias_group') {
-          aliasGroup = parseNumber(row.value, -1);
-        } else {
-          properties.push(row);
+      if (row.name === 'top_banner_background' || row.name === 'profile_image') {
+        const imageId = parseNumber(row.value);
+        if (imageId) {
+          imageIdMap[row.name] = imageId;
+          imageIds.push(imageId);
         }
+      } else if (row.name === 'alias_group') {
+        aliasGroup = parseNumber(row.value, -1);
+      } else {
+        properties.push(row);
+      }
     });
 
     const imagesPromise = imageIds.length ? this.commonService.getImagesUrl(imageIds) : promiseEmpty();
 
     //Get alias rows
     const aliasFields = [];
-    if(aliasGroup > 0) {
-      for(let i = 0; i < aliasGroup; i++) {
+    if (aliasGroup > 0) {
+      for (let i = 0; i < aliasGroup; i++) {
         aliasFields.push(`alias_group_${i}_alias_item`);
       }
     }
 
-    const aliasGroupPromise = !aliasFields.length ? promiseEmpty() : this.termMetaRepository.createQueryBuilder('tm')
-        .where('tm.termId = :termId', {termId: actor.id})
-        .andWhere('tm.metaKey IN(:...metaKeys)', {metaKeys: aliasFields})
-        .select(['tm.metaValue as value'])
-        .getRawMany();
+    const aliasGroupPromise = !aliasFields.length
+      ? promiseEmpty()
+      : this.termMetaRepository
+          .createQueryBuilder('tm')
+          .where('tm.termId = :termId', { termId: actor.id })
+          .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
+          .select(['tm.metaValue as value'])
+          .getRawMany();
 
     const countViewPromise = this.openSearchService.getTermViews(actor.id);
 
-    const [imageMap, aliasItems, views] = await Promise.all([
-      imagesPromise,
-      aliasGroupPromise,
-      countViewPromise,
-    ]);
-
-    return {
+    const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);
+    const responseData = {
       id: actor.slug,
       title: actor.name,
-      preview: imageIdMap.profile_image ? (imageMap[imageIdMap.profile_image] || null) : null,
+      preview: imageIdMap.profile_image ? imageMap[imageIdMap.profile_image] || null : null,
       studios: studios,
       properties: properties,
-      aliases: aliasItems.map(v => v.value),
+      aliases: aliasItems.map((v: any) => v.value),
       views: views,
-      banner: imageIdMap.profile_image ? (imageMap[imageIdMap.top_banner_background] || null) : null,
+      banner: imageIdMap.profile_image ? imageMap[imageIdMap.top_banner_background] || null : null,
     };
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3000 });
+    return responseData;
   }
 
   private metaKeys = [
@@ -188,9 +206,6 @@ export class ActorService {
     'breast_size',
     'hair_color',
     'eyecolor',
-    // 'webpage',
-    // 'twitter',
-    // 'facebook',
     'ethnicity',
     'country_of_origin',
     'alias_group',

@@ -8,18 +8,18 @@ import { unserialize } from 'php-serialize';
 import { IFPage, IFVideoListView } from 'src/types';
 import { IFVideoView } from 'src/types/index';
 import { Repository } from 'typeorm';
-import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
-import {convertTimeToSeconds, parseNumber, promiseEmpty} from 'src/helper';
+import { convertTimeToSeconds, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { UserService } from '../user/user.service';
-import * as SqlString from "sqlstring";
+import * as SqlString from 'sqlstring';
 
 @Injectable()
 export class VideoService {
+  private cache: Map<string, { data: any; expiresAt: number }> = new Map<string, { data: any; expiresAt: number }>();
   constructor(
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
@@ -47,9 +47,25 @@ export class VideoService {
     const paramStudio = query.studio ? query.studio : null;
     const paramTitle = query.title ? query.title : null;
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
-    const order = query.order === 'popularity' ? 'pp.premiumPopularScore' : (query.order === 'release_date' ? 'release_date' : 'post.postName');
+    const order =
+      query.order === 'popularity'
+        ? 'pp.premiumPopularScore'
+        : query.order === 'release_date'
+        ? 'release_date'
+        : 'post.postName';
 
     //Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
+    const keyCache = generateKeyCache('video_list_data', query);
+    const cachedVideos = this.cache.get(keyCache);
+    if (cachedVideos && cachedVideos.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
+      return {
+        page_index: query.page,
+        item_count: query.perPage,
+        page_total: Math.ceil(cachedVideos.data.count / query.perPage),
+        item_total: cachedVideos.data.count,
+        content: cachedVideos.data.content,
+      };
+    }
 
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
@@ -75,41 +91,47 @@ export class VideoService {
     }
     //==== Lọc theo actor
     if (paramActor) {
-      const subQuery = this.termRepository.createQueryBuilder('t')
-          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
-          .where(`t.name LIKE :actorLike`, {actorLike: `%${paramActor}%`})
-          .select(['tr.objectId as pid']).getQueryAndParameters();
+      const subQuery = this.termRepository
+        .createQueryBuilder('t')
+        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
+        .where(`t.name LIKE :actorLike`, { actorLike: `%${paramActor}%` })
+        .select(['tr.objectId as pid'])
+        .getQueryAndParameters();
 
-        queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
+      queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
     }
 
-    if(Array.isArray(query.includedCategories) && query.includedCategories.length) {
-      const subQuery2 = this.termRepository.createQueryBuilder('t')
-          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
-          .where(`t.slug IN(:...slugs)`, {slugs: query.includedCategories})
-          .select(['tr.objectId as pid']).getQueryAndParameters();
+    if (Array.isArray(query.includedCategories) && query.includedCategories.length) {
+      const subQuery2 = this.termRepository
+        .createQueryBuilder('t')
+        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
+        .where(`t.slug IN(:...slugs)`, { slugs: query.includedCategories })
+        .select(['tr.objectId as pid'])
+        .getQueryAndParameters();
 
       queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery2[0], subQuery2[1])})`);
     }
 
-    if(Array.isArray(query.excludedCategories) && query.excludedCategories.length) {
-      const subQuery3 = this.termRepository.createQueryBuilder('t')
-          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-          .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
-          .where(`t.slug IN(:...slugs)`, {slugs: query.excludedCategories})
-          .select(['tr.objectId as pid']).getQueryAndParameters();
+    if (Array.isArray(query.excludedCategories) && query.excludedCategories.length) {
+      const subQuery3 = this.termRepository
+        .createQueryBuilder('t')
+        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
+        .where(`t.slug IN(:...slugs)`, { slugs: query.excludedCategories })
+        .select(['tr.objectId as pid'])
+        .getQueryAndParameters();
 
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
     queryVideo.select([
-        'post.id as id',
-        'post.postName as postName',
-        'termStudio.name as subtitle',
-        'post.postTitle as postTitle',
-        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-      ]);
+      'post.id as id',
+      'post.postName as postName',
+      'termStudio.name as subtitle',
+      'post.postTitle as postTitle',
+      'IFNULL(pp.ppdate, post.postDate) as `release_date`',
+    ]);
 
     const dataPromis = queryVideo
       .limit(query.perPage)
@@ -122,31 +144,31 @@ export class VideoService {
 
     let content = [];
 
-    if(Array.isArray(data) && data.length) {
+    if (Array.isArray(data) && data.length) {
       const videoIds = data.map((v) => v.id);
 
-      const metaRows = await this.postMetaRepository.createQueryBuilder('pm')
-          .where('pm.metaKey IN(:...metaKeys)', {metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd']})
-          .andWhere('pm.postId IN(:...ids)', {ids: videoIds})
-          .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
-          .getRawMany();
+      const metaRows = await this.postMetaRepository
+        .createQueryBuilder('pm')
+        .where('pm.metaKey IN(:...metaKeys)', { metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd'] })
+        .andWhere('pm.postId IN(:...ids)', { ids: videoIds })
+        .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
+        .getRawMany();
 
       const imageIds = [];
       const attachmentIds = [];
       const metaMap = {};
 
       metaRows.forEach((v) => {
-        if(!metaMap[v.id]) metaMap[v.id] = {};
+        if (!metaMap[v.id]) metaMap[v.id] = {};
 
         const attachmentId = parseNumber(v.mv);
 
-        if(v.mk === '_thumbnail_id') {
+        if (v.mk === '_thumbnail_id') {
           metaMap[v.id].image_id = attachmentId;
 
-          if(attachmentId) imageIds.push(attachmentId);
-
+          if (attachmentId) imageIds.push(attachmentId);
         } else {
-          if(attachmentId) attachmentIds.push(attachmentId);
+          if (attachmentId) attachmentIds.push(attachmentId);
 
           metaMap[v.id][v.mk === 'video' ? 'trailer_id' : 'full_id'] = attachmentId;
         }
@@ -155,11 +177,14 @@ export class VideoService {
       //Load preview images
       const imagesPromise = imageIds.length ? this.commonService.getImagesUrl(imageIds) : promiseEmpty({});
       //Load attachment meta data;
-      const attachementDataPromise = attachmentIds.length ? this.postMetaRepository.createQueryBuilder('pm')
-          .where('pm.metaKey = "_wp_attachment_metadata"')
-          .andWhere('pm.postId IN(:...ids)', {ids: attachmentIds})
-          .select(['pm.postId as id', 'pm.metaValue as value'])
-          .getRawMany() : promiseEmpty([]);
+      const attachementDataPromise = attachmentIds.length
+        ? this.postMetaRepository
+            .createQueryBuilder('pm')
+            .where('pm.metaKey = "_wp_attachment_metadata"')
+            .andWhere('pm.postId IN(:...ids)', { ids: attachmentIds })
+            .select(['pm.postId as id', 'pm.metaValue as value'])
+            .getRawMany()
+        : promiseEmpty([]);
 
       const [imagesMap, attachementDataRows] = await Promise.all([imagesPromise, attachementDataPromise]);
 
@@ -175,16 +200,16 @@ export class VideoService {
           id: video?.id,
           title: video?.postTitle,
           subtitle: video?.subtitle,
-          preview_image: metaData.image_id ? (imagesMap[metaData.image_id] || null) : null,
+          preview_image: metaData.image_id ? imagesMap[metaData.image_id] || null : null,
           release_date: video.release_date ? Math.round(new Date(video.release_date).getTime() / 1000) : 0,
           details: this.getInfoDetailsVideo({
-            infoTrailer: metaData.trailer_id ? (attachmentDataMap[metaData.trailer_id] || null) : null,
-            infoFull: metaData.full_id ? (attachmentDataMap[metaData.full_id] || null) : null,
+            infoTrailer: metaData.trailer_id ? attachmentDataMap[metaData.trailer_id] || null : null,
+            infoFull: metaData.full_id ? attachmentDataMap[metaData.full_id] || null : null,
           }),
         };
       });
     }
-
+    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3000 });
     return {
       page_index: query.page,
       item_count: query.perPage,
@@ -198,7 +223,34 @@ export class VideoService {
     const userLevel = await this.userService.getUserLevel(token);
 
     //Cache here: cache_key = `video_detail_data:${postId}`, cache_data = {result, studio, categories, actors, view, imagesMap, attachmentDataMap}
-
+    const keyCache = generateKeyCache('video_detail_data', { postId });
+    const cachedVideo = this.cache.get(keyCache);
+    if (cachedVideo && cachedVideo.expiresAt > Date.now() && validatedKeyCache(keyCache, { postId })) {
+      return {
+        id: cachedVideo.data.result?.id.toString(),
+        title: cachedVideo.data.result?.postTitle.toString(),
+        subtitle: cachedVideo.data.studio?.title,
+        description: cachedVideo.data.result?.postContent.toString(),
+        preview_image: cachedVideo.data.metaMap.image_id
+          ? cachedVideo.data.imagesMap[cachedVideo.data.metaMap.image_id] || null
+          : null,
+        release_date: cachedVideo.data.result.release_date
+          ? Math.round(new Date(cachedVideo.data.result.release_date).getTime() / 1000)
+          : 0,
+        studio: cachedVideo.data.studio,
+        categories: cachedVideo.data.categories,
+        actors: cachedVideo.data.actors,
+        views: cachedVideo.data.view,
+        details: await this.getVideoDetailsInfoWithLinks(cachedVideo.data.result.id, userLevel, {
+          infoTrailer: cachedVideo.data.metaMap.trailer_id
+            ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.trailer_id] || null
+            : null,
+          infoFull: cachedVideo.data.metaMap.full_id
+            ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.full_id] || null
+            : null,
+        }),
+      };
+    }
     const result = await this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -249,18 +301,19 @@ export class VideoService {
 
     const viewsPromise = this.opensearchService.getPostViews(Number(postId));
 
-    const metaRows = await this.postMetaRepository.createQueryBuilder('pm')
-        .where('pm.metaKey IN(:...metaKeys)', {metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd']})
-        .andWhere('pm.postId = :id', {id: videoId})
-        .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
-        .getRawMany();
+    const metaRows = await this.postMetaRepository
+      .createQueryBuilder('pm')
+      .where('pm.metaKey IN(:...metaKeys)', { metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd'] })
+      .andWhere('pm.postId = :id', { id: videoId })
+      .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
+      .getRawMany();
 
     const metaMap: any = {};
 
     metaRows.forEach((v) => {
       const attachmentId = parseNumber(v.mv);
 
-      if(v.mk === '_thumbnail_id') {
+      if (v.mk === '_thumbnail_id') {
         metaMap.image_id = attachmentId;
       } else {
         metaMap[v.mk === 'video' ? 'trailer_id' : 'full_id'] = attachmentId;
@@ -270,11 +323,12 @@ export class VideoService {
     //Load preview images
     const imagesPromise = metaMap.image_id ? this.commonService.getImagesUrl([metaMap.image_id]) : promiseEmpty({});
     //Load attachment meta data;
-    const attachementDataPromise = this.postMetaRepository.createQueryBuilder('pm')
-        .where('pm.metaKey = "_wp_attachment_metadata"')
-        .andWhere('pm.postId IN(:...ids)', {ids: [metaMap.trailer_id, metaMap.full_id]})
-        .select(['pm.postId as id', 'pm.metaValue as value'])
-        .getRawMany();
+    const attachementDataPromise = this.postMetaRepository
+      .createQueryBuilder('pm')
+      .where('pm.metaKey = "_wp_attachment_metadata"')
+      .andWhere('pm.postId IN(:...ids)', { ids: [metaMap.trailer_id, metaMap.full_id] })
+      .select(['pm.postId as id', 'pm.metaValue as value'])
+      .getRawMany();
 
     const [studio, categories, actors, view, imagesMap, attachementDataRows] = await Promise.all([
       studioPromise,
@@ -289,21 +343,24 @@ export class VideoService {
     attachementDataRows.forEach((v) => {
       attachmentDataMap[v.id] = v.value;
     });
-
+    this.cache.set(keyCache, {
+      data: { result, studio, categories, actors, view, imagesMap, attachmentDataMap },
+      expiresAt: Date.now() + 3000,
+    });
     return {
       id: result?.id.toString(),
       title: result?.postTitle.toString(),
       subtitle: studio?.title,
       description: result?.postContent.toString(),
-      preview_image: metaMap.image_id ? (imagesMap[metaMap.image_id] || null) : null,
+      preview_image: metaMap.image_id ? imagesMap[metaMap.image_id] || null : null,
       release_date: result.release_date ? Math.round(new Date(result.release_date).getTime() / 1000) : 0,
       studio: studio,
       categories: categories,
       actors: actors,
       views: view,
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
-        infoTrailer: metaMap.trailer_id ? (attachmentDataMap[metaMap.trailer_id] || null) : null,
-        infoFull: metaMap.full_id ? (attachmentDataMap[metaMap.full_id] || null) : null,
+        infoTrailer: metaMap.trailer_id ? attachmentDataMap[metaMap.trailer_id] || null : null,
+        infoFull: metaMap.full_id ? attachmentDataMap[metaMap.full_id] || null : null,
       }),
     };
   }

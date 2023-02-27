@@ -1,35 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TermEntity } from 'src/entities/term.entity';
-import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { OptionsEntity } from 'src/entities/options.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CommonService } from '../common/common.service';
-import * as uslParse from 'url-parse';
-import {parseNumber} from "../../helper";
+import { generateKeyCache, parseNumber, validatedKeyCache } from '../../helper';
+
 @Injectable()
 export class CategoryService {
+  private cache: Map<string, { data: any; expiresAt: number }> = new Map<string, { data: any; expiresAt: number }>();
   constructor(
-    @InjectRepository(TermEntity)
-    private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(OptionsEntity)
     private readonly optionsRepository: Repository<OptionsEntity>,
     private readonly commonService: CommonService
   ) {}
 
   async getCategoryList(): Promise<any> {
-    // const data = await this.termRepository
-    //   .createQueryBuilder('term')
-    //   .leftJoinAndSelect(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-    //   .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id')
-    //   .where('tt.taxonomy = :taxonomy', { taxonomy: 'post_tag' })
-    //   // .andWhere('term.name LIKE :title', { title: `%${query.title}%` })
-    //   .andWhere('tm.metaKey = :metaKey', { metaKey: 'color_background' })
-    //   .select(['term.id as id', 'term.slug as slug', 'term.name as name', 'tm.metaValue as meta'])
-    //   .getRawMany();
-
     //Cache here: cache_key = `categories_data`, cache_data = {content}
-
+    const keyCache = generateKeyCache('categories_data', {});
+    const cachedActor = this.cache.get(keyCache);
+    if (cachedActor && cachedActor.expiresAt > Date.now() && validatedKeyCache(keyCache, {})) {
+      return cachedActor.data.content;
+    }
     const result = await this.optionsRepository
       .createQueryBuilder('o')
       .select(["SUBSTRING_INDEX(REPLACE(o.name, 'options_categories_display_', ''), '_', -1) as name"])
@@ -41,16 +32,14 @@ export class CategoryService {
       .where("o.name LIKE 'options_categories_display_%'")
       .andWhere(
         new Brackets((qb) => {
-          qb.where("o.name LIKE '%_name'")
-            .orWhere("o.name LIKE '%_url'")
-            .orWhere("o.name LIKE '%_image'");
+          qb.where("o.name LIKE '%_name'").orWhere("o.name LIKE '%_url'").orWhere("o.name LIKE '%_image'");
         })
       )
       .orderBy('idx')
       .getRawMany();
 
     const items = [];
-    if(Array.isArray(result) && result.length) {
+    if (Array.isArray(result) && result.length) {
       result.forEach((row) => {
         const currentRow: any = items[row.idx] || {};
 
@@ -69,10 +58,10 @@ export class CategoryService {
       return {
         id: slug,
         title: item.name,
-        preview: item.image ? (paths[item.image] || null) : null,
+        preview: item.image ? paths[item.image] || null : null,
       };
     });
-
+    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3000 });
     return content;
   }
 }

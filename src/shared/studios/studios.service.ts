@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { As3cfItemsEntity } from 'src/entities/as3cf_items.entity';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
-import { PostEntity } from 'src/entities/post.entity';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
@@ -12,49 +10,60 @@ import { IFStudioListView, IFStudioView, IFPage, QueryBody } from 'src/types';
 import { Repository } from 'typeorm';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
-import {parseNumber, promiseEmpty} from "../../helper";
+import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
 
 @Injectable()
 export class StudiosService {
+  private cache: Map<string, { data: any; expiresAt: number }> = new Map<string, { data: any; expiresAt: number }>();
   constructor(
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
-    @InjectRepository(PostEntity)
-    private readonly postRepository: Repository<PostEntity>,
     private readonly openSearchService: OpenSearchService,
-    private readonly commonService: CommonService,
+    private readonly commonService: CommonService
   ) {}
 
   async getStudioList(query: QueryBody): Promise<IFPage<IFStudioListView[]>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
 
-      //Cache here: cache_key = `studio_list_data:${md5(queryObject)}`, cache_data = {content, count}
-
+    //Cache here: cache_key = `studio_list_data:${md5(queryObject)}`, cache_data = {content, count}
+    const keyCache = generateKeyCache('studio_list_data', query);
+    const cachedStudios = this.cache.get(keyCache);
+    if (cachedStudios && cachedStudios.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
+      return {
+        page_index: query.page,
+        item_count: query.perPage,
+        page_total: Math.ceil(cachedStudios.data.count / query.perPage),
+        item_total: cachedStudios.data.count,
+        content: cachedStudios.data.content,
+      };
+    }
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
 
-    if(query.title) {
+    if (query.title) {
       actorQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
 
     actorQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
 
-    if(query.order === 'popularity') {
+    if (query.order === 'popularity') {
       actorQuery.addSelect((subQuery) => {
-          return subQuery.select('SUM(pp.premiumPopularScore)', 'result')
-              .from(PopularScoresEntity, 'pp')
-              .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
-              .where('tr.termId = term.id');
+        return subQuery
+          .select('SUM(pp.premiumPopularScore)', 'result')
+          .from(PopularScoresEntity, 'pp')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+          .where('tr.termId = term.id');
       }, 'popularity');
     }
 
-    const dataPromise = actorQuery.limit(query.perPage)
+    const dataPromise = actorQuery
+      .limit(query.perPage)
       .orderBy(order, direction)
       .offset((query.page - 1) * query.perPage)
       .getRawMany();
@@ -63,40 +72,41 @@ export class StudiosService {
     const [data, count] = await Promise.all([dataPromise, countPromise]);
 
     let content = [];
-    const imageIds = [], imageStudioMap: any = {};
-    if(Array.isArray(data) && data.length) {
-        data.forEach((item) => {
-          if(item.image) {
-              let imageId = 0;
-              if(parseNumber(item.image)) {
-                  imageId = parseNumber(item.image);
-              } else {
-                  try {
-                      const imageData = JSON.parse(item.image);
+    const imageIds = [],
+      imageStudioMap: any = {};
+    if (Array.isArray(data) && data.length) {
+      data.forEach((item) => {
+        if (item.image) {
+          let imageId = 0;
+          if (parseNumber(item.image)) {
+            imageId = parseNumber(item.image);
+          } else {
+            try {
+              const imageData = JSON.parse(item.image);
 
-                      if(imageData.cropped_image) imageId = parseNumber(imageData.cropped_image);
-                  } catch (e: any) {}
-              }
-
-              if(imageId) {
-                  imageIds.push(imageId);
-                  imageStudioMap[item.id] = imageId;
-              }
+              if (imageData.cropped_image) imageId = parseNumber(imageData.cropped_image);
+            } catch (e: any) {}
           }
-        });
 
-        const imageMap = imageIds.length ? await this.commonService.getImagesUrl(imageIds) : {};
+          if (imageId) {
+            imageIds.push(imageId);
+            imageStudioMap[item.id] = imageId;
+          }
+        }
+      });
 
-        content = data.map((v) => {
-           return {
-               id: v.id,
-               title: v.name,
-               preview: imageStudioMap[v.id] ? (imageMap[imageStudioMap[v.id]] || null) : null
-           };
-        });
+      const imageMap = imageIds.length ? await this.commonService.getImagesUrl(imageIds) : {};
+
+      content = data.map((v) => {
+        return {
+          id: v.id,
+          title: v.name,
+          preview: imageStudioMap[v.id] ? imageMap[imageStudioMap[v.id]] || null : null,
+        };
+      });
     }
-
-    return  {
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3000 });
+    return {
       page_index: query.page,
       item_count: query.perPage,
       page_total: Math.ceil(count / query.perPage),
@@ -106,40 +116,43 @@ export class StudiosService {
   }
 
   async getStudioDetail(slug: string): Promise<IFStudioView | null> {
-      //Cache here: cache_key = `studio_detail_data:${slug}`, cache_data = {responseData}
+    //Cache here: cache_key = `studio_detail_data:${slug}`, cache_data = {responseData}
 
+    const keyCache = generateKeyCache('studio_detail_data', { slug });
+    const cachedStudio = this.cache.get(keyCache);
+    if (cachedStudio && cachedStudio.expiresAt > Date.now() && validatedKeyCache(keyCache, { slug })) {
+      return cachedStudio.data.responseData;
+    }
     const studio = await this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id AND tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
+      .leftJoinAndSelect(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', {
+        metaKey: 'logo_single_post',
+      })
       .where('term.slug = :slug', { slug })
-      .select([
-        'term.id as id',
-        'term.slug as sid',
-        'term.name as name',
-        'tm.metaValue as image',
-      ])
+      .select(['term.id as id', 'term.slug as sid', 'term.name as name', 'tm.metaValue as image'])
       .getRawOne();
 
     if (!studio) throw new DataNotFoundException('Studio not found');
 
     let imageId = 0;
-    if(studio.image) {
-        if(parseNumber(studio.image)) {
-            imageId = parseNumber(studio.image);
-        } else {
-            try {
-                const imageData = JSON.parse(studio.image);
+    if (studio.image) {
+      if (parseNumber(studio.image)) {
+        imageId = parseNumber(studio.image);
+      } else {
+        try {
+          const imageData = JSON.parse(studio.image);
 
-                if(imageData.cropped_image) imageId = parseNumber(imageData.cropped_image);
-            } catch (e: any) {}
-        }
+          if (imageData.cropped_image) imageId = parseNumber(imageData.cropped_image);
+        } catch (e: any) {}
+      }
     }
 
     const imagePromise = imageId ? this.commonService.getImagesUrl([imageId]) : promiseEmpty();
 
-    const metaDataPromise = this.termMetaRepository.createQueryBuilder('tm')
-      .where('tm.termId = :termId', {termId: studio.id})
+    const metaDataPromise = this.termMetaRepository
+      .createQueryBuilder('tm')
+      .where('tm.termId = :termId', { termId: studio.id })
       .andWhere('tm.metaKey = "footer_text"')
       .select(['tm.metaValue as value'])
       .getRawOne();
@@ -147,13 +160,14 @@ export class StudiosService {
     const viewsPromise = await this.openSearchService.getTermViews(studio.id);
 
     const [imageMap, metaData, views] = await Promise.all([imagePromise, metaDataPromise, viewsPromise]);
-
-    return {
+    const responseData = {
       id: studio?.slug,
       title: studio?.name,
-      preview: imageId ? (imageMap[imageId] || null) : null,
+      preview: imageId ? imageMap[imageId] || null : null,
       description: metaData?.value || null,
       views: views,
     };
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3000 });
+    return responseData;
   }
 }

@@ -7,7 +7,7 @@ export class OptionsEntity {
   @Column({ name: 'option_name' })
   name: number;
 
-  @Column({type: 'blob', name: 'option_value' })
+  @Column({ type: 'blob', name: 'option_value' })
   value: string;
 
   autoload: string;

@@ -1,5 +1,7 @@
 import * as urlParse from 'url-parse';
 import * as md5 from 'crypto-js/md5';
+import { Md5 as HashMd5 } from 'ts-md5';
+
 export function convertTimeToSeconds(timeString: string) {
   const parts = timeString.split(':');
   const minutes = parseInt(parts[0], 10);
@@ -43,7 +45,7 @@ export function cdnReplaceDomain(url: string, domain?: string): string {
 
   const urlPart: any = urlParse(url);
 
-  if(urlPart.pathname.substring(0, 1) === '/') {
+  if (urlPart.pathname.substring(0, 1) === '/') {
     urlPart.pathname = urlPart.pathname.substring(1);
   }
 
@@ -101,7 +103,7 @@ export function getTableWithPrefix(table: string): string {
 }
 
 export function parseNumber(num: any, def?: number) {
-  if(typeof def === 'undefined') {
+  if (typeof def === 'undefined') {
     def = 0;
   }
 
@@ -113,5 +115,19 @@ export function parseNumber(num: any, def?: number) {
 export function promiseEmpty(value?: any): Promise<any> {
   value = typeof value === 'undefined' ? null : value;
 
-  return new Promise((resolve, reject) => {resolve(value);});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return new Promise((resolve, reject) => {
+    resolve(value);
+  });
+}
+
+export function generateKeyCache(path: string, objFilter: any) {
+  const objStr = JSON.stringify(objFilter);
+  const hasherObj = HashMd5.hashStr(objStr);
+  return `${path}:${hasherObj}`;
+}
+
+export function validatedKeyCache(key: string, objFilter: any) {
+  const objStr = JSON.stringify(objFilter);
+  return HashMd5.hashStr(objStr) === key.split(':')?.[1];
 }

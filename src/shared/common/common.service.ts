@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { appendCdnDomain, cdnReplaceDomain, getDownloadId, getTableWithPrefix, signCdnUrl } from '../../helper';
+import {
+  appendCdnDomain,
+  cdnReplaceDomain,
+  generateKeyCache,
+  getDownloadId,
+  signCdnUrl,
+  validatedKeyCache,
+} from '../../helper';
 import { unserialize } from 'php-serialize';
 import { As3cfItemsEntity } from './../../entities/as3cf_items.entity';
 import { PostMetaEntity } from './../../entities/post_meta.entity';
@@ -9,10 +16,10 @@ import { PostEntity } from './../../entities/post.entity';
 import { IFVideoLink } from './../../types/data.type';
 import { TermRelationShipsBasicEntity } from '../../entities/term_relationships_basic.entity';
 import { TermEntity } from '../../entities/term.entity';
-import { Url } from '../../types';
 
 @Injectable()
 export class CommonService {
+  private cache: Map<string, { data: any; expiresAt: number }> = new Map<string, { data: any; expiresAt: number }>();
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -79,7 +86,11 @@ export class CommonService {
 
   async loadVideosData(videoId: number): Promise<any> {
     //Cache here: cache_key = `video_data_cache:${videoId}`, cache_data = {videoData}
-
+    const keyCache = generateKeyCache('video_data_cache', { videoId });
+    const cachedVideoData = this.cache.get(keyCache);
+    if (cachedVideoData && cachedVideoData.expiresAt > Date.now() && validatedKeyCache(keyCache, { videoId })) {
+      return cachedVideoData.data.videoData;
+    }
     const videoData: any = { id: videoId, four_k_paid_source: '', sd_source: '' };
 
     const videoFields: string[] = [
@@ -150,7 +161,7 @@ export class CommonService {
         }
       });
 
-      if(!videoData.sd_source) {
+      if (!videoData.sd_source) {
         videoData.sd_source = await this.getS3MetaInfoKey(videoId);
         videoData.sd_stream = videoData.sd_source;
       }
@@ -228,7 +239,7 @@ export class CommonService {
         }
       }
     }
-
+    this.cache.set(keyCache, { data: { videoData }, expiresAt: Date.now() + 3000 });
     return videoData;
   }
 
@@ -287,10 +298,10 @@ export class CommonService {
         }
       } else {
         let reason = null;
-        if(type === 'full') {
+        if (type === 'full') {
           reason = 'premium';
-        } else if(v.ul > userLevel) {
-            reason = userLevel == 1 ? 'premium' : 'login';
+        } else if (v.ul > userLevel) {
+          reason = userLevel == 1 ? 'premium' : 'login';
         }
 
         if (v.stream) {
