@@ -68,7 +68,7 @@ export class ActorService {
     const dataPromise = actorQuery
       .limit(query.perPage)
       .orderBy(order, direction)
-      .offset((query.page - 1) * query.perPage)
+      .offset(query.page * query.perPage)
       .getRawMany();
 
     const countPromise = actorQuery.getCount();

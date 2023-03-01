@@ -9,7 +9,7 @@ export class StudiosViewController {
 
   @Get('/studios')
   async getStudios(@Query() query: any): Promise<IFRsp<IFPage<IFStudioListView[]>>> {
-    const page = parseNumber(query['page-index'], 1);
+    const page = parseNumber(query['page-index'], 0);
     const perPage = parseNumber(query['page-size'], 20);
     const order = query['order'] && ['title', 'popularity'].indexOf(query['order']) !== -1 ? query['order'] : 'title';
     const direction = query['direction'] || 'asc';

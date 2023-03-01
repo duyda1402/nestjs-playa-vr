@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { LoginDto } from './dto/login.dto';
 import { IFToken, IFRsp } from 'src/types';
 
 import { JwtService } from '@nestjs/jwt';
@@ -10,7 +9,7 @@ import * as hasher from 'wordpress-hash-node';
 export class AuthService {
   constructor(private readonly jwtService: JwtService, private readonly userService: UserService) {}
 
-  async login(loginDto: LoginDto): Promise<IFRsp<IFToken>> {
+  async login(loginDto: { login?: string; password?: string }): Promise<IFRsp<IFToken>> {
     const { login, password } = loginDto;
     // Kiểm tra tính hợp lệ của thông tin đăng nhập
     if (!login || !password) {

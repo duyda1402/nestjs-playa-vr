@@ -9,7 +9,7 @@ export class AuthFailedException extends HttpException {
           code: 3,
         },
       },
-      HttpStatus.BAD_REQUEST
+      HttpStatus.OK
     );
   }
 }
@@ -23,7 +23,22 @@ export class UnauthorizedException extends HttpException {
           code: 3,
         },
       },
-      HttpStatus.UNAUTHORIZED
+      HttpStatus.OK
+    );
+  }
+}
+
+export class SuccessExceptionxtends extends HttpException {
+  constructor(data?: any) {
+    super(
+      {
+        status: {
+          code: 1,
+          message: 'successful',
+        },
+        data: data,
+      },
+      HttpStatus.OK
     );
   }
 }

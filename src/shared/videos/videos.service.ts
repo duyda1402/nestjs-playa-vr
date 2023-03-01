@@ -52,7 +52,7 @@ export class VideoService {
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : 'post.postName';
+        : 'post.postTitle';
 
     //Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
@@ -136,7 +136,7 @@ export class VideoService {
     const dataPromis = queryVideo
       .limit(query.perPage)
       .orderBy(order, direction)
-      .offset((query.page - 1) * query.perPage)
+      .offset(query.page * query.perPage)
       .getRawMany();
 
     const countPromise = await queryVideo.getCount();
