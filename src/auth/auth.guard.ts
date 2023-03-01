@@ -1,6 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('access') implements CanActivate {
@@ -33,5 +35,41 @@ export class RefreshAuthGuard extends AuthGuard('refresh') implements CanActivat
     const request = context.switchToHttp().getRequest();
     request.user = { roles };
     return super.canActivate(context);
+  }
+}
+
+@Injectable()
+export class JwtUserGuard extends AuthGuard('jwt') {
+  constructor(private jwtService: JwtService) {
+    super();
+  }
+
+  async canActivate(context: any): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractToken(request);
+
+    if (!token) {
+      return true;
+    }
+    console.log(token);
+    const payload = await this.jwtService.verifyAsync(token, { secret: 'at-secret' });
+
+    if (!payload) {
+      request.user = null;
+    }
+
+    request.user = payload;
+
+    return true;
+  }
+
+  private extractToken(request: any) {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    return authHeader.substring(7);
   }
 }

@@ -219,9 +219,8 @@ export class VideoService {
     };
   }
 
-  async getVideoDetail(postId: string, token: string): Promise<IFVideoView | null> {
-    const userLevel = await this.userService.getUserLevel(token);
-
+  async getVideoDetail(postId: string, userId?: any): Promise<IFVideoView | null> {
+    const userLevel = await this.userService.getUserLevel(userId);
     //Cache here: cache_key = `video_detail_data:${postId}`, cache_data = {result, studio, categories, actors, view, imagesMap, attachmentDataMap}
     const keyCache = generateKeyCache('video_detail_data', { postId });
     const cachedVideo = this.cache.get(keyCache);
@@ -231,7 +230,7 @@ export class VideoService {
         title: cachedVideo.data.result?.postTitle.toString(),
         subtitle: cachedVideo.data.studio?.title,
         description: cachedVideo.data.result?.postContent.toString(),
-        preview_image: cachedVideo.data.metaMap.image_id
+        preview_image: cachedVideo.data.metaMap?.image_id
           ? cachedVideo.data.imagesMap[cachedVideo.data.metaMap.image_id] || null
           : null,
         release_date: cachedVideo.data.result.release_date
@@ -242,7 +241,7 @@ export class VideoService {
         actors: cachedVideo.data.actors,
         views: cachedVideo.data.view,
         details: await this.getVideoDetailsInfoWithLinks(cachedVideo.data.result.id, userLevel, {
-          infoTrailer: cachedVideo.data.metaMap.trailer_id
+          infoTrailer: cachedVideo.data.metaMap?.trailer_id
             ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.trailer_id] || null
             : null,
           infoFull: cachedVideo.data.metaMap.full_id
@@ -251,7 +250,6 @@ export class VideoService {
         }),
       };
     }
-
     const result = await this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -331,7 +329,7 @@ export class VideoService {
       .select(['pm.postId as id', 'pm.metaValue as value'])
       .getRawMany();
 
-    const [studio, categories, actors, view, imagesMap, attachementDataRows] = await Promise.all([
+    const [studio, categories, actors, views, imagesMap, attachementDataRows] = await Promise.all([
       studioPromise,
       categoriesPromise,
       actorsPromise,
@@ -345,7 +343,7 @@ export class VideoService {
       attachmentDataMap[v.id] = v.value;
     });
     this.cache.set(keyCache, {
-      data: { result, studio, categories, actors, view, imagesMap, attachmentDataMap },
+      data: { result, studio, categories, actors, imagesMap, metaMap, attachmentDataMap },
       expiresAt: Date.now() + 3 * 60 * 60 * 1000,
     });
     return {
@@ -358,7 +356,7 @@ export class VideoService {
       studio: studio,
       categories: categories,
       actors: actors,
-      views: view,
+      views: views,
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
         infoTrailer: metaMap.trailer_id ? attachmentDataMap[metaMap.trailer_id] || null : null,
         infoFull: metaMap.full_id ? attachmentDataMap[metaMap.full_id] || null : null,

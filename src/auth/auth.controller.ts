@@ -14,7 +14,6 @@ export class AuthController {
   @Post('/auth/sign-in-password')
   @HttpCode(200)
   async signInPassword(@Body() loginDto: { login?: string; password?: string }): Promise<IFRsp<IFToken>> {
-    console.log(loginDto);
     const result = await this.authService.login(loginDto);
     return result;
   }

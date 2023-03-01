@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
 import { parseNumber } from '../../helper';
+import { JwtUserGuard } from 'src/auth/auth.guard';
+import { Request } from 'express';
 
 @Controller('')
 export class VideoController {
@@ -45,8 +47,15 @@ export class VideoController {
     };
   }
   @Get('/video/:id')
-  async getStudiDetail(@Param('id') postId: string, @Body('access_token') token: string): Promise<IFRsp<IFVideoView>> {
-    const result = await this.videoService.getVideoDetail(postId, token);
+  @UseGuards(JwtUserGuard)
+  async getStudiDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {
+    let result = null;
+    if (request.user) {
+      result = await this.videoService.getVideoDetail(postId, request.user['sub']);
+    } else {
+      result = await this.videoService.getVideoDetail(postId);
+    }
+
     return { status: { code: 1, message: 'okey' }, data: result };
   }
 }
