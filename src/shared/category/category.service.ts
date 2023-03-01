@@ -61,7 +61,7 @@ export class CategoryService {
         preview: item.image ? paths[item.image] || null : null,
       };
     });
-    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return content;
   }
 }

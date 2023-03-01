@@ -34,8 +34,8 @@ export class StudiosService {
     if (cachedStudios && cachedStudios.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
       return {
         page_index: query.page,
-        item_count: query.perPage,
-        page_total: Math.ceil(cachedStudios.data.count / query.perPage),
+        page_size: query.perPage,
+        page_total: cachedStudios.data.count > 0 ? Math.ceil(cachedStudios.data.count / query.perPage) : 1,
         item_total: cachedStudios.data.count,
         content: cachedStudios.data.content,
       };
@@ -105,11 +105,11 @@ export class StudiosService {
         };
       });
     }
-    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return {
       page_index: query.page,
-      item_count: query.perPage,
-      page_total: Math.ceil(count / query.perPage),
+      page_size: query.perPage,
+      page_total: count > 0 ? Math.ceil(count / query.perPage) : 1,
       item_total: count,
       content: content,
     };
@@ -166,7 +166,7 @@ export class StudiosService {
       description: metaData?.value || null,
       views: views,
     };
-    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return responseData;
   }
 }

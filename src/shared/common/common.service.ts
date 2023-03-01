@@ -239,7 +239,7 @@ export class CommonService {
         }
       }
     }
-    this.cache.set(keyCache, { data: { videoData }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { videoData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return videoData;
   }
 

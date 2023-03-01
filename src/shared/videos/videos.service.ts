@@ -60,8 +60,8 @@ export class VideoService {
     if (cachedVideos && cachedVideos.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
       return {
         page_index: query.page,
-        item_count: query.perPage,
-        page_total: Math.ceil(cachedVideos.data.count / query.perPage),
+        page_size: query.perPage,
+        page_total: cachedVideos.data.count > 0 ? Math.ceil(cachedVideos.data.count / query.perPage) : 1,
         item_total: cachedVideos.data.count,
         content: cachedVideos.data.content,
       };
@@ -209,11 +209,11 @@ export class VideoService {
         };
       });
     }
-    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return {
       page_index: query.page,
-      item_count: query.perPage,
-      page_total: Math.ceil(count / query.perPage),
+      page_size: query.perPage,
+      page_total: count > 0 ? Math.ceil(count / query.perPage) : 1,
       item_total: count,
       content: content,
     };
@@ -251,6 +251,7 @@ export class VideoService {
         }),
       };
     }
+
     const result = await this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
@@ -345,7 +346,7 @@ export class VideoService {
     });
     this.cache.set(keyCache, {
       data: { result, studio, categories, actors, view, imagesMap, attachmentDataMap },
-      expiresAt: Date.now() + 3000,
+      expiresAt: Date.now() + 3 * 60 * 60 * 1000,
     });
     return {
       id: result?.id.toString(),

@@ -37,8 +37,8 @@ export class ActorService {
     if (cachedActors && cachedActors.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
       return {
         page_index: query.page,
-        item_count: query.perPage,
-        page_total: Math.ceil(cachedActors.data.count / query.perPage),
+        page_size: query.perPage,
+        page_total: cachedActors.data.count > 0 ? Math.ceil(cachedActors.data.count / query.perPage) : 1,
         item_total: cachedActors.data.count,
         content: cachedActors.data.content,
       };
@@ -89,12 +89,12 @@ export class ActorService {
       preview: item.image_id ? imageMap[item.image_id] || null : null,
     }));
 
-    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
 
     return {
       page_index: query.page,
-      item_count: query.perPage,
-      page_total: Math.ceil(count / query.perPage),
+      page_size: query.perPage,
+      page_total: count > 0 ? Math.ceil(count / query.perPage) : 1,
       item_total: count,
       content: content,
     };
@@ -127,8 +127,8 @@ export class ActorService {
     const studiosPromise = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'term.id = tt.termId')
-      .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      .leftJoinAndSelect(TermRelationShipsBasicEntity, 'tr', 'term.id = tr.termId')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'term.id = tr.termId')
+      .where('tt.taxonomy = :taxoStudio', { taxoStudio: 'studio' })
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
@@ -142,27 +142,34 @@ export class ActorService {
       .getRawMany();
 
     const [metaRows, studios] = await Promise.all([metaDataPromise, studiosPromise]);
+    const studioMaps = [];
+    studios.forEach((item) => {
+      const rs = studioMaps.some((value) => value.id === item.id);
+      if (!rs) studioMaps.push(item);
+    });
 
     const imageIds = [];
     let aliasGroup = -1;
     const properties: any[] = [];
     const imageIdMap: any = {};
 
-    metaRows.forEach((row) => {
-      if (row.name === 'top_banner_background' || row.name === 'profile_image') {
-        const imageId = parseNumber(row.value);
-        if (imageId) {
-          imageIdMap[row.name] = imageId;
-          imageIds.push(imageId);
+    metaRows &&
+      metaRows.length > 0 &&
+      metaRows.forEach((row) => {
+        if (row.name === 'top_banner_background' || row.name === 'profile_image') {
+          const imageId = parseNumber(row.value);
+          if (imageId) {
+            imageIdMap[row.name] = imageId;
+            imageIds.push(imageId);
+          }
+        } else if (row.name === 'alias_group') {
+          aliasGroup = parseNumber(row.value, -1);
+        } else {
+          properties.push(row);
         }
-      } else if (row.name === 'alias_group') {
-        aliasGroup = parseNumber(row.value, -1);
-      } else {
-        properties.push(row);
-      }
-    });
+      });
 
-    const imagesPromise = imageIds.length ? this.commonService.getImagesUrl(imageIds) : promiseEmpty();
+    const imagesPromise = imageIds.length > 0 ? this.commonService.getImagesUrl(imageIds) : promiseEmpty();
 
     //Get alias rows
     const aliasFields = [];
@@ -180,21 +187,21 @@ export class ActorService {
           .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
           .select(['tm.metaValue as value'])
           .getRawMany();
-
     const countViewPromise = this.openSearchService.getTermViews(actor.id);
 
     const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);
+    // const [imageMap, aliasItems] = await Promise.all([imagesPromise, aliasGroupPromise]);
     const responseData = {
       id: actor.slug,
       title: actor.name,
       preview: imageIdMap.profile_image ? imageMap[imageIdMap.profile_image] || null : null,
-      studios: studios,
+      studios: studioMaps,
       properties: properties,
-      aliases: aliasItems.map((v: any) => v.value),
+      aliases: aliasItems && aliasItems[0] ? aliasItems.map((v: any) => v.value) : [],
       views: views,
       banner: imageIdMap.profile_image ? imageMap[imageIdMap.top_banner_background] || null : null,
     };
-    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3000 });
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return responseData;
   }
 

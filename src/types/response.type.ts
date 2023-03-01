@@ -21,7 +21,7 @@ export interface IFConfig {
 
 export interface IFPage<Type> {
   page_index: number;
-  item_count: number;
+  page_size: number;
   page_total: number;
   item_total: number;
   content: Type;
