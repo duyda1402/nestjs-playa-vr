@@ -300,7 +300,7 @@ export class VideoService {
       .select(['term.slug as id', 'term.name as title'])
       .getRawMany();
 
-    const viewsPromise = this.opensearchService.getPostViews(Number(postId));
+    const viewsPromise = this.opensearchService.getPostViews(Number(result?.id));
 
     const metaRows = await this.postMetaRepository
       .createQueryBuilder('pm')
