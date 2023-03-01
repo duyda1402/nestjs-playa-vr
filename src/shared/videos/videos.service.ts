@@ -431,6 +431,8 @@ export class VideoService {
       details.push({
         type: 'full',
         duration_seconds: timeFull,
+        //Here Fix Time Atlas
+        timeline_atlas: { version: 1, url: '' },
         links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
       });
     return details;
