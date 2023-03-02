@@ -50,7 +50,6 @@ export class JwtUserGuard extends AuthGuard('jwt') {
     if (!token) {
       return true;
     }
-    console.log(token);
     try {
       const payload = await this.jwtService.verifyAsync(token, { secret: 'at-secret' });
       if (!payload) {

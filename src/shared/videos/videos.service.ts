@@ -143,7 +143,7 @@ export class VideoService {
 
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    console.log(count);
+
     let content = [];
 
     if (Array.isArray(data) && data.length) {
@@ -243,11 +243,17 @@ export class VideoService {
         actors: cachedVideo.data.actors,
         views: cachedVideo.data.view,
         details: await this.getVideoDetailsInfoWithLinks(cachedVideo.data.result.id, userLevel, {
-          infoTrailer: cachedVideo.data.metaMap?.trailer_id
+          infoTrailer: cachedVideo.data.metaMap.trailer_id
             ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.trailer_id] || null
             : null,
           infoFull: cachedVideo.data.metaMap.full_id
             ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.full_id] || null
+            : null,
+          atlasFull: cachedVideo.data.metaMap.full_atlas
+            ? cachedVideo.data.imagesMap[cachedVideo.data.metaMap.full_atlas] || null
+            : null,
+          atlasTrailer: cachedVideo.data.metaMap.trailer_atlas
+            ? cachedVideo.data.imagesMap[cachedVideo.data.metaMap.trailer_atlas] || null
             : null,
         }),
       };
@@ -304,25 +310,38 @@ export class VideoService {
 
     const metaRows = await this.postMetaRepository
       .createQueryBuilder('pm')
-      .where('pm.metaKey IN(:...metaKeys)', { metaKeys: ['_thumbnail_id', 'video', 'full_size_video_file_paid_sd'] })
+      .where('pm.metaKey IN(:...metaKeys)', {
+        metaKeys: [
+          '_thumbnail_id',
+          'video',
+          'full_size_video_file_paid_sd',
+          'video_thumbnails_detail_tube',
+          'video_paid_thumbnails_detail_tube',
+        ],
+      })
       .andWhere('pm.postId = :id', { id: videoId })
       .select(['pm.postId as id', 'pm.metaKey as mk', 'pm.metaValue as mv'])
       .getRawMany();
 
     const metaMap: any = {};
-
     metaRows.forEach((v) => {
       const attachmentId = parseNumber(v.mv);
 
       if (v.mk === '_thumbnail_id') {
         metaMap.image_id = attachmentId;
+      } else if (v.mk === 'video_thumbnails_detail_tube') {
+        metaMap.trailer_atlas = attachmentId;
+      } else if (v.mk === 'video_paid_thumbnails_detail_tube') {
+        metaMap.full_atlas = attachmentId;
       } else {
         metaMap[v.mk === 'video' ? 'trailer_id' : 'full_id'] = attachmentId;
       }
     });
 
     //Load preview images
-    const imagesPromise = metaMap.image_id ? this.commonService.getImagesUrl([metaMap.image_id]) : promiseEmpty({});
+    const imagesPromise = metaMap.image_id
+      ? this.commonService.getImagesUrl([metaMap.image_id, metaMap.trailer_atlas, metaMap.full_atlas])
+      : promiseEmpty({});
     //Load attachment meta data;
     const attachementDataPromise = this.postMetaRepository
       .createQueryBuilder('pm')
@@ -362,6 +381,8 @@ export class VideoService {
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
         infoTrailer: metaMap.trailer_id ? attachmentDataMap[metaMap.trailer_id] || null : null,
         infoFull: metaMap.full_id ? attachmentDataMap[metaMap.full_id] || null : null,
+        atlasFull: metaMap.full_atlas ? imagesMap[metaMap.full_atlas] || null : null,
+        atlasTrailer: metaMap.trailer_atlas ? imagesMap[metaMap.trailer_atlas] || null : null,
       }),
     };
   }
@@ -400,7 +421,7 @@ export class VideoService {
   async getVideoDetailsInfoWithLinks(
     videoId: number,
     userLevel: number,
-    data: { infoTrailer: string | null; infoFull: string | null }
+    data: { infoTrailer: string | null; infoFull: string | null; atlasTrailer: string | null; atlasFull: string | null }
   ) {
     const details = [];
     const trailer = data.infoTrailer ? unserialize(data.infoTrailer) : null;
@@ -417,6 +438,7 @@ export class VideoService {
       details.push({
         type: 'trailer',
         duration_seconds: timeTrailer,
+        timeline_atlas: { version: 1, url: data.atlasTrailer },
         links: await this.commonService.buildVideoLinks('trailer', videoData, userLevel),
       });
     const full = data.infoFull ? unserialize(data.infoFull) : null;
@@ -432,7 +454,7 @@ export class VideoService {
         type: 'full',
         duration_seconds: timeFull,
         //Here Fix Time Atlas
-        timeline_atlas: { version: 1, url: '' },
+        timeline_atlas: { version: 1, url: data.atlasFull },
         links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
       });
     return details;
