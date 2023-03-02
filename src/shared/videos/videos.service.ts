@@ -238,10 +238,10 @@ export class VideoService {
         release_date: cachedVideo.data.result.release_date
           ? Math.round(new Date(cachedVideo.data.result.release_date).getTime() / 1000)
           : 0,
+        views: cachedVideo.data.view,
         studio: cachedVideo.data.studio,
         categories: cachedVideo.data.categories,
         actors: cachedVideo.data.actors,
-        views: cachedVideo.data.view,
         details: await this.getVideoDetailsInfoWithLinks(cachedVideo.data.result.id, userLevel, {
           infoTrailer: cachedVideo.data.metaMap.trailer_id
             ? cachedVideo.data.attachmentDataMap[cachedVideo.data.metaMap.trailer_id] || null
@@ -373,11 +373,11 @@ export class VideoService {
       subtitle: studio?.title,
       description: result?.postContent.toString(),
       preview_image: metaMap.image_id ? imagesMap[metaMap.image_id] || null : null,
+      views: views,
       release_date: result.release_date ? Math.round(new Date(result.release_date).getTime() / 1000) : 0,
       studio: studio,
       categories: categories,
       actors: actors,
-      views: views,
       details: await this.getVideoDetailsInfoWithLinks(result.id, userLevel, {
         infoTrailer: metaMap.trailer_id ? attachmentDataMap[metaMap.trailer_id] || null : null,
         infoFull: metaMap.full_id ? attachmentDataMap[metaMap.full_id] || null : null,
