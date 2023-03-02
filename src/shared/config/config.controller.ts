@@ -8,7 +8,7 @@ import { ConfigService } from './config.service';
 export class ConfigController {
   constructor(private readonly configService: ConfigService) {}
 
-  @Get('')
+  @Get()
   async getConfig(): Promise<IFRsp<IFConfig>> {
     const result = await this.configService.getConfig();
     return result;

@@ -4,8 +4,9 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 export class OptionsEntity {
   @PrimaryGeneratedColumn({ name: 'option_id' })
   id: number;
+
   @Column({ name: 'option_name' })
-  name: number;
+  name: string;
 
   @Column({ type: 'blob', name: 'option_value' })
   value: string;
