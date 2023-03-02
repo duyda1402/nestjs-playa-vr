@@ -131,3 +131,19 @@ export function validatedKeyCache(key: string, objFilter: any) {
   const objStr = JSON.stringify(objFilter);
   return HashMd5.hashStr(objStr) === key.split(':')?.[1];
 }
+
+export function converProperties(row: { name: string; value: string }) {
+  const label = {
+    birthdate: 'Birthdate',
+    birthplate: 'Birthplate',
+    height: 'Height',
+    weight: 'Weight',
+    breast_size: 'Breast Size',
+    hair_color: 'Hair color',
+    eyecolor: 'Eye color',
+    ethnicity: 'Ethnicity',
+    country_of_origin: 'Country of origin',
+  };
+  const labelMap = label[row.name] ? label[row.name] : 'Other';
+  return { name: labelMap, value: row.value };
+}

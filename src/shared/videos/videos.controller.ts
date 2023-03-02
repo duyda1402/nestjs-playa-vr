@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
@@ -46,6 +46,7 @@ export class VideoController {
       data: result,
     };
   }
+
   @Get('/video/:id')
   @UseGuards(JwtUserGuard)
   async getStudiDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {

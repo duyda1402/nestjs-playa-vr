@@ -12,7 +12,7 @@ import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_ba
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
-import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { converProperties, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
 
 @Injectable()
 export class ActorService {
@@ -165,7 +165,7 @@ export class ActorService {
         } else if (row.name === 'alias_group') {
           aliasGroup = parseNumber(row.value, -1);
         } else {
-          properties.push(row);
+          properties.push(converProperties(row));
         }
       });
 
@@ -187,6 +187,7 @@ export class ActorService {
           .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
           .select(['tm.metaValue as value'])
           .getRawMany();
+
     const countViewPromise = this.openSearchService.getTermViews(actor.id);
 
     const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);

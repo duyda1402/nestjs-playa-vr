@@ -53,8 +53,7 @@ export class VideoService {
         : query.order === 'release_date'
         ? 'release_date'
         : 'post.postTitle';
-
-    //Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
+    // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
     if (cachedVideos && cachedVideos.expiresAt > Date.now() && validatedKeyCache(keyCache, query)) {
@@ -98,20 +97,24 @@ export class VideoService {
         .where(`t.name LIKE :actorLike`, { actorLike: `%${paramActor}%` })
         .select(['tr.objectId as pid'])
         .getQueryAndParameters();
-
       queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
     }
 
     if (Array.isArray(query.includedCategories) && query.includedCategories.length) {
-      const subQuery2 = this.termRepository
-        .createQueryBuilder('t')
-        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "post_tag"')
-        .where(`t.slug IN(:...slugs)`, { slugs: query.includedCategories })
-        .select(['tr.objectId as pid'])
-        .getQueryAndParameters();
-
-      queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery2[0], subQuery2[1])})`);
+      query.includedCategories.forEach((term) => {
+        term.trim() &&
+          queryVideo
+            .innerJoin(TermRelationShipsBasicEntity, `tr${term}`, `tr${term}.objectId = post.id`)
+            .leftJoin(
+              TermTaxonomyEntity,
+              `tt${term}`,
+              `tt${term}.termId = tr${term}.termId AND tt${term}.taxonomy = 'post_tag' `
+            )
+            .leftJoin(TermEntity, `term${term}`, `term${term}.id = tt${term}.termId`)
+            .andWhere(`term${term}.slug = :slug${term}`, {
+              [`slug${term}`]: term,
+            });
+      });
     }
 
     if (Array.isArray(query.excludedCategories) && query.excludedCategories.length) {
@@ -122,7 +125,6 @@ export class VideoService {
         .where(`t.slug IN(:...slugs)`, { slugs: query.excludedCategories })
         .select(['tr.objectId as pid'])
         .getQueryAndParameters();
-
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
     queryVideo.select([
@@ -141,7 +143,7 @@ export class VideoService {
 
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-
+    console.log(count);
     let content = [];
 
     if (Array.isArray(data) && data.length) {
