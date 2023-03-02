@@ -364,7 +364,7 @@ export class VideoService {
       attachmentDataMap[v.id] = v.value;
     });
     this.cache.set(keyCache, {
-      data: { result, studio, categories, actors, imagesMap, metaMap, attachmentDataMap },
+      data: { result, studio, categories, views, actors, imagesMap, metaMap, attachmentDataMap },
       expiresAt: Date.now() + 3 * 60 * 60 * 1000,
     });
     return {
