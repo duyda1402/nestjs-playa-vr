@@ -144,6 +144,15 @@ export function converProperties(row: { name: string; value: string }) {
     ethnicity: 'Ethnicity',
     country_of_origin: 'Country of origin',
   };
-  const labelMap = label[row.name] ? label[row.name] : 'Other';
-  return { name: labelMap, value: row.value };
+  let labelMap = 'Other';
+  let valueMap = '';
+  if (row.name === 'birthdate') {
+    const d = new Date(row.value);
+    valueMap = d.toLocaleDateString();
+  } else {
+    labelMap = label[row.name] ? label[row.name] : 'Other';
+    valueMap = row.value;
+  }
+
+  return { name: labelMap, value: valueMap };
 }
