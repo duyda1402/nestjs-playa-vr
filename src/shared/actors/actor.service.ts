@@ -124,6 +124,7 @@ export class ActorService {
 
     const studiosPromise = this.termRepository
       .createQueryBuilder('term')
+      .distinct()
       .innerJoin(TermTaxonomyEntity, 'tt', 'term.id = tt.termId')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'term.id = tr.termId')
       .where('tt.taxonomy = :taxoStudio', { taxoStudio: 'studio' })
@@ -140,11 +141,11 @@ export class ActorService {
       .getRawMany();
 
     const [metaRows, studios] = await Promise.all([metaDataPromise, studiosPromise]);
-    const studioMaps = [];
-    studios.forEach((item) => {
-      const rs = studioMaps.some((value) => value.id === item.id);
-      if (!rs) studioMaps.push(item);
-    });
+    // const studioMaps = [];
+    // studios.forEach((item) => {
+    //   const rs = studioMaps.some((value) => value.id === item.id);
+    //   if (!rs) studioMaps.push(item);
+    // });
 
     const imageIds = [];
     let aliasGroup = -1;
@@ -194,7 +195,7 @@ export class ActorService {
       id: actor.slug,
       title: actor.name,
       preview: imageIdMap.profile_image ? imageMap[imageIdMap.profile_image] || null : null,
-      studios: studioMaps,
+      studios: studios,
       properties: properties,
       aliases: aliasItems && aliasItems[0] ? aliasItems.map((v: any) => v.value) : [],
       views: views,
