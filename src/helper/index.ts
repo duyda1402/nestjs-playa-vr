@@ -147,7 +147,7 @@ export function converProperties(row: { name: string; value: string }) {
   let labelMap = 'Other';
   let valueMap = '';
   if (row.name === 'birthdate') {
-    const d = new Date(row.value);
+    const d = new Date(Number(row.value));
     valueMap = d.toLocaleDateString();
   } else {
     labelMap = label[row.name] ? label[row.name] : 'Other';
