@@ -86,51 +86,39 @@ export class VideoService {
 
     //======== Lọc theo studio
     if (paramStudio) {
-      queryVideo.andWhere('termStudio.name LIKE :charNameStudio', { charNameStudio: `%${paramStudio}%` });
+      queryVideo.andWhere('termStudio.slug = :studioId', { studioId: paramStudio });
     }
     //==== Lọc theo actor
     if (paramActor) {
       queryVideo.andWhere((qb) => {
         const subQuery = qb
           .subQuery()
-          .select(['trActor.objectId as pid'])
+          .select('trActor.objectId')
           .from(TermEntity, 'termActor')
           .innerJoin(TermRelationShipsBasicEntity, 'trActor', 'trActor.termId = termActor.id')
-          .innerJoin(
-            TermTaxonomyEntity,
-            'ttActor',
-            'ttActor.termId = termActor.id AND ttActor.taxonomy = :actorTaxonomy',
-            {
-              actorTaxonomy: 'porn_star_name',
-            }
-          )
-          .where(`termActor.name LIKE :actorFilter`, { actorFilter: `%${paramActor}%` })
+          .leftJoin(TermTaxonomyEntity, 'ttActor', 'ttActor.termId = termActor.id')
+          .where('ttActor.taxonomy = :actorTaxonomy', {
+            actorTaxonomy: 'porn_star_name',
+          })
+          .andWhere('termActor.slug = :actorId', { actorId: paramActor })
           .getQuery();
-        return 'post.id IN ' + subQuery;
+        return `post.id IN (${subQuery})`;
       });
-      // const subQuery = this.termRepository
-      //   .createQueryBuilder('t')
-      //   .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-      //   .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
-      //   .where(`t.name LIKE :actorLike`, { actorLike: `%${paramActor}%` })
-      //   .select(['tr.objectId as pid'])
-      //   .getQueryAndParameters();
-      // queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
     }
 
     if (Array.isArray(query.includedCategories) && query.includedCategories.length) {
-      query.includedCategories.forEach((term) => {
+      query.includedCategories.forEach((term, index) => {
         term.trim() &&
           queryVideo
-            .innerJoin(TermRelationShipsBasicEntity, `tr${term}`, `tr${term}.objectId = post.id`)
+            .innerJoin(TermRelationShipsBasicEntity, `trin${index}`, `trin${index}.objectId = post.id`)
             .leftJoin(
               TermTaxonomyEntity,
-              `tt${term}`,
-              `tt${term}.termId = tr${term}.termId AND tt${term}.taxonomy = 'post_tag' `
+              `ttin${index}`,
+              `ttin${index}.termId = trin${index}.termId AND ttin${index}.taxonomy = 'post_tag' `
             )
-            .leftJoin(TermEntity, `term${term}`, `term${term}.id = tt${term}.termId`)
-            .andWhere(`term${term}.slug = :slug${term}`, {
-              [`slug${term}`]: term,
+            .leftJoin(TermEntity, `termin${index}`, `termin${index}.id = ttin${index}.termId`)
+            .andWhere(`termin${index}.slug = :slugin${index}`, {
+              [`slugin${index}`]: term,
             });
       });
     }
@@ -145,6 +133,7 @@ export class VideoService {
         .getQueryAndParameters();
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
+
     queryVideo.select([
       'post.id as id',
       'post.postName as postName',
