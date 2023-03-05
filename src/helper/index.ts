@@ -148,7 +148,14 @@ export function converProperties(row: { name: string; value: string }) {
   let valueMap = '';
   if (row.name === 'birthdate') {
     const d = new Date(Number(row.value));
+    labelMap = label[row.name] ? label[row.name] : 'Other';
     valueMap = d.toLocaleDateString();
+  } else if (row.name === 'height') {
+    labelMap = label[row.name] ? label[row.name] : 'Other';
+    valueMap = row.value + ' cm';
+  } else if (row.name === 'weight') {
+    labelMap = label[row.name] ? label[row.name] : 'Other';
+    valueMap = row.value + ' kg';
   } else {
     labelMap = label[row.name] ? label[row.name] : 'Other';
     valueMap = row.value;
