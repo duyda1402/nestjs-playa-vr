@@ -40,20 +40,20 @@ export class StudiosService {
         content: cachedStudios.data.content,
       };
     }
-    const actorQuery = this.termRepository
+    const studioQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
 
     if (query.title) {
-      actorQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
+      studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
 
-    actorQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
+    studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
 
     if (query.order === 'popularity') {
-      actorQuery.addSelect((subQuery) => {
+      studioQuery.addSelect((subQuery) => {
         return subQuery
           .select('SUM(pp.premiumPopularScore)', 'result')
           .from(PopularScoresEntity, 'pp')
@@ -62,13 +62,13 @@ export class StudiosService {
       }, 'popularity');
     }
 
-    const dataPromise = actorQuery
+    const dataPromise = studioQuery
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    const countPromise = actorQuery.getCount();
+    const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
 
     let content = [];

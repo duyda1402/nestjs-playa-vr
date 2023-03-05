@@ -90,14 +90,32 @@ export class VideoService {
     }
     //==== Lọc theo actor
     if (paramActor) {
-      const subQuery = this.termRepository
-        .createQueryBuilder('t')
-        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
-        .where(`t.name LIKE :actorLike`, { actorLike: `%${paramActor}%` })
-        .select(['tr.objectId as pid'])
-        .getQueryAndParameters();
-      queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
+      queryVideo.andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select(['trActor.objectId as pid'])
+          .from(TermEntity, 'termActor')
+          .innerJoin(TermRelationShipsBasicEntity, 'trActor', 'trActor.termId = termActor.id')
+          .innerJoin(
+            TermTaxonomyEntity,
+            'ttActor',
+            'ttActor.termId = termActor.id AND ttActor.taxonomy = :actorTaxonomy',
+            {
+              actorTaxonomy: 'porn_star_name',
+            }
+          )
+          .where(`termActor.name LIKE :actorFilter`, { actorFilter: `%${paramActor}%` })
+          .getQuery();
+        return 'post.id IN ' + subQuery;
+      });
+      // const subQuery = this.termRepository
+      //   .createQueryBuilder('t')
+      //   .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+      //   .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id AND tt.taxonomy = "porn_star_name"')
+      //   .where(`t.name LIKE :actorLike`, { actorLike: `%${paramActor}%` })
+      //   .select(['tr.objectId as pid'])
+      //   .getQueryAndParameters();
+      // queryVideo.andWhere(`post.id IN(${SqlString.format(subQuery[0], subQuery[1])})`);
     }
 
     if (Array.isArray(query.includedCategories) && query.includedCategories.length) {

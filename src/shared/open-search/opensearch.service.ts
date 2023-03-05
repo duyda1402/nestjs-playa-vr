@@ -61,6 +61,7 @@ export class OpenSearchService {
   }
 
   async getTermViews(tid: number): Promise<number> {
+    console.log('Test');
     const rows = await this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = post.ID')

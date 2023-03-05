@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { TermMetaEntity } from 'src/entities/term_meta.entity';
-import { PostEntity } from 'src/entities/post.entity';
 import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_basic.entity';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
@@ -22,7 +21,6 @@ export class ActorService {
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
-    @InjectRepository(PostEntity)
     private readonly openSearchService: OpenSearchService,
     private readonly commonService: CommonService
   ) {}
