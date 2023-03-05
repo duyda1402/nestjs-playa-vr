@@ -147,15 +147,17 @@ export function converProperties(row: { name: string; value: string }) {
   let labelMap = 'Other';
   let valueMap = '';
   if (row.name === 'birthdate') {
-    const d = new Date(Number(row.value));
+    const dyear = row.value.slice(0, 4);
+    const dmonth = row.value.slice(4, 6);
+    const dday = row.value.slice(6, 8);
     labelMap = label[row.name] ? label[row.name] : 'Other';
-    valueMap = d.toLocaleDateString();
+    valueMap = row.value && `${dday}/${dmonth}/${dyear}`;
   } else if (row.name === 'height') {
     labelMap = label[row.name] ? label[row.name] : 'Other';
-    valueMap = row.value + ' cm';
+    valueMap = row.value ? row.value + ' cm' : '';
   } else if (row.name === 'weight') {
     labelMap = label[row.name] ? label[row.name] : 'Other';
-    valueMap = row.value + ' kg';
+    valueMap = row.value ? row.value + ' kg' : '';
   } else {
     labelMap = label[row.name] ? label[row.name] : 'Other';
     valueMap = row.value;

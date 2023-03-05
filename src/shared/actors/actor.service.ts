@@ -186,11 +186,10 @@ export class ActorService {
           .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
           .select(['tm.metaValue as value'])
           .getRawMany();
+    // const countViewPromise = this.openSearchService.getTermViews(actor.id);
 
-    const countViewPromise = this.openSearchService.getTermViews(actor.id);
-
-    const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);
-    // const [imageMap, aliasItems] = await Promise.all([imagesPromise, aliasGroupPromise]);
+    // const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);
+    const [imageMap, aliasItems] = await Promise.all([imagesPromise, aliasGroupPromise]);
     const responseData = {
       id: actor.slug,
       title: actor.name,
@@ -198,7 +197,7 @@ export class ActorService {
       studios: studios,
       properties: properties,
       aliases: aliasItems && aliasItems[0] ? aliasItems.map((v: any) => v.value) : [],
-      views: views,
+      views: 100, //views,
       banner: imageIdMap.profile_image ? imageMap[imageIdMap.top_banner_background] || null : null,
     };
     this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
