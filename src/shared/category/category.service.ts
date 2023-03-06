@@ -75,6 +75,7 @@ export class CategoryService {
       .innerJoin(PostEntity, 'post', 'post.id =  trs.objectId')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
       .andWhere('tr.termId = :termRelationId', { termRelationId: 251 })
+      .andWhere('term.slug != "none"')
       .getRawMany();
 
     const arrCategoryAll = categoryAll.map((v) => ({
