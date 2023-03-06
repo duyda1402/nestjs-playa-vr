@@ -77,14 +77,13 @@ export class CategoryService {
       .andWhere('tr.termId = :termRelationId', { termRelationId: 251 })
       .getRawMany();
 
-    const content = categoryAll.map((v) => {
-      const cMap = categoryImage.find((vf) => vf.id === v.id);
-      return {
-        id: v.id,
-        title: v.title,
-        preview: cMap ? cMap.preview : null,
-      };
-    });
+    const arrCategoryAll = categoryAll.map((v) => ({
+      id: v.id,
+      title: v.title,
+      preview: null,
+    }));
+    const B_not_in_A = arrCategoryAll.filter((itemB) => !categoryImage.some((itemA) => itemA.id === itemB.id));
+    const content = categoryImage.concat(B_not_in_A);
     this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return content;
   }
