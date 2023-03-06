@@ -218,7 +218,7 @@ export class VideoService {
         };
       });
     }
-    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return {
       page_index: query.page,
       page_size: query.perPage,
