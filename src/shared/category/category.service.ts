@@ -6,6 +6,8 @@ import { CommonService } from '../common/common.service';
 import { generateKeyCache, parseNumber, validatedKeyCache } from '../../helper';
 import { TermEntity } from './../../entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
+import { TermRelationShipsBasicEntity } from './../../entities/term_relationships_basic.entity';
+import { PostEntity } from './../../entities/post.entity';
 
 @Injectable()
 export class CategoryService {
@@ -20,11 +22,11 @@ export class CategoryService {
 
   async getCategoryList(): Promise<any> {
     //Cache here: cache_key = `categories_data`, cache_data = {content}
-    const keyCache = generateKeyCache('categories_data', {});
-    const cachedActor = this.cache.get(keyCache);
-    if (cachedActor && cachedActor.expiresAt > Date.now() && validatedKeyCache(keyCache, {})) {
-      return cachedActor.data.content;
-    }
+    // const keyCache = generateKeyCache('categories_data', {});
+    // const cachedActor = this.cache.get(keyCache);
+    // if (cachedActor && cachedActor.expiresAt > Date.now() && validatedKeyCache(keyCache, {})) {
+    //   return cachedActor.data.content;
+    // }
     const options = await this.optionsRepository
       .createQueryBuilder('o')
       .select(["SUBSTRING_INDEX(REPLACE(o.name, 'options_categories_display_', ''), '_', -1) as name"])
@@ -67,8 +69,12 @@ export class CategoryService {
       .createQueryBuilder('term')
       .select(['term.slug as id', 'term.name as title'])
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = term.id')
+      .innerJoin(PostEntity, 'post', 'post.id = tr.objectId')
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'post_tag' })
+      .andWhere('post.postStatus = :status', { status: 'publish' })
       .getRawMany();
+    console.log(categoryAll);
     const content = categoryAll.map((v) => {
       const cMap = categoryImage.find((vf) => vf.id === v.id);
       return {
@@ -77,7 +83,7 @@ export class CategoryService {
         preview: cMap ? cMap.preview : null,
       };
     });
-    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    // this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
     return content;
   }
 }
