@@ -445,7 +445,7 @@ export class VideoService {
       details.push({
         type: 'trailer',
         duration_seconds: timeTrailer,
-        timeline_atlas: { version: 1, url: data.atlasTrailer },
+        // timeline_atlas: { version: 1, url: data.atlasTrailer },
         links: await this.commonService.buildVideoLinks('trailer', videoData, userLevel),
       });
     const full = data.infoFull ? unserialize(data.infoFull) : null;
@@ -461,7 +461,7 @@ export class VideoService {
         type: 'full',
         duration_seconds: timeFull,
         //Here Fix Time Atlas
-        timeline_atlas: { version: 1, url: data.atlasFull },
+        // timeline_atlas: { version: 1, url: data.atlasFull },
         links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
       });
     return details;
