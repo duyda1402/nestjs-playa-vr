@@ -135,7 +135,7 @@ export function validatedKeyCache(key: string, objFilter: any) {
 export function converProperties(row: { name: string; value: string }) {
   const label = {
     birthdate: 'Birthdate',
-    birthplate: 'Birthplate',
+    birthplate: 'Birthplace',
     height: 'Height',
     weight: 'Weight',
     breast_size: 'Breast Size',
