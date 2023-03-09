@@ -20,7 +20,7 @@ export class UnauthorizedException extends HttpException {
       {
         status: {
           message: 'Unauthorized',
-          code: 3,
+          code: 401,
         },
       },
       HttpStatus.OK
