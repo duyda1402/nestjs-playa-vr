@@ -3,8 +3,8 @@ import { IFRsp, IFPage, IFVideoListView } from 'src/types';
 import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
 import { parseNumber } from '../../helper';
-import { JwtUserGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
+import { JwtAuthGuard } from './../../auth/auth.guard';
 
 @Controller('')
 export class VideoController {
@@ -48,7 +48,7 @@ export class VideoController {
   }
 
   @Get('/video/:id')
-  @UseGuards(JwtUserGuard)
+  @UseGuards(JwtAuthGuard)
   async getStudiDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {
     let result = null;
     if (request.user) {
