@@ -9,7 +9,7 @@ export class DataNotFoundException extends HttpException {
           code: 3,
         },
       },
-      HttpStatus.NOT_FOUND
+      HttpStatus.OK
     );
   }
 }

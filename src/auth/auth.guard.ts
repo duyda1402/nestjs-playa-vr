@@ -2,21 +2,19 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import { UnauthorizedException } from 'src/exceptions/auth.exception';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('access') implements CanActivate {
+export class JwtAuthGuard extends AuthGuard('access') {
   constructor(private readonly reflector: Reflector) {
     super();
   }
 
-  canActivate(context: ExecutionContext): any {
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    if (!roles) {
-      return super.canActivate(context);
+  handleRequest(err: any, user: any, info: any, context: any) {
+    if (err || !user) {
+      throw err || new UnauthorizedException();
     }
-    const request = context.switchToHttp().getRequest();
-    request.user = { roles };
-    return super.canActivate(context);
+    return user;
   }
 }
 
