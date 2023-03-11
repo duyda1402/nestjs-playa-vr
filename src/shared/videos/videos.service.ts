@@ -456,7 +456,7 @@ export class VideoService {
         ? convertTimeToSeconds(full?.length_formatted)
         : null
       : null;
-    if (timeFull)
+    if (timeFull && userLevel === 2)
       details.push({
         type: 'full',
         duration_seconds: timeFull,

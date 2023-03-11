@@ -4,7 +4,7 @@ import { VideoService } from './videos.service';
 import { IFVideoView } from 'src/types/index';
 import { parseNumber } from '../../helper';
 import { Request } from 'express';
-import { JwtAuthGuard } from './../../auth/auth.guard';
+import { JwtUserGuard } from './../../auth/auth.guard';
 
 @Controller('')
 export class VideoController {
@@ -48,7 +48,7 @@ export class VideoController {
   }
 
   @Get('/video/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtUserGuard)
   async getStudiDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {
     let result = null;
     if (request.user) {
