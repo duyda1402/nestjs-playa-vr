@@ -449,24 +449,23 @@ export class VideoService {
         links: await this.commonService.buildVideoLinks('trailer', videoData, userLevel),
       });
 
-    if (userLevel === 2) {
-      const full = data.infoFull ? unserialize(data.infoFull) : null;
-      const timeFull = full
-        ? full?.length
-          ? Number(full?.length)
-          : full?.length_formatted
-          ? convertTimeToSeconds(full?.length_formatted)
-          : null
-        : null;
-      if (timeFull)
-        details.push({
-          type: 'full',
-          duration_seconds: timeFull,
-          //Here Fix Time Atlas
-          // timeline_atlas: { version: 1, url: data.atlasFull },
-          links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
-        });
-    }
+    const full = data.infoFull ? unserialize(data.infoFull) : null;
+    const timeFull = full
+      ? full?.length
+        ? Number(full?.length)
+        : full?.length_formatted
+        ? convertTimeToSeconds(full?.length_formatted)
+        : null
+      : null;
+    if (timeFull)
+      details.push({
+        type: 'full',
+        duration_seconds: timeFull,
+        //Here Fix Time Atlas
+        // timeline_atlas: { version: 1, url: data.atlasFull },
+        links: await this.commonService.buildVideoLinks('full', videoData, userLevel),
+      });
+
     return details;
   }
 }
