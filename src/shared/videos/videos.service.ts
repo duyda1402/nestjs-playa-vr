@@ -143,7 +143,7 @@ export class VideoService {
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
       .addSelect(
-        `REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle,'\'', ''), '\" ',''),"#",''),'[^\w\s]','')`,
+        `REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle,'\' ', ''), '\" ',''),"#",''),'\\w','')`,
         'nametranform'
       );
 
