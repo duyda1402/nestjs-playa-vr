@@ -510,6 +510,5 @@ export class VideoService {
   private query37 = `REPLACE(${this.query36}, "*", '')`;
   private query38 = `REPLACE(${this.query37}, "+", '')`;
   private query39 = `REPLACE(${this.query38}, "~", '')`;
-  private query40 = `REPLACE(${this.query39}, "\`", '')`;
-  private queryReplace = this.query40;
+  private queryReplace = this.query39;
 }
