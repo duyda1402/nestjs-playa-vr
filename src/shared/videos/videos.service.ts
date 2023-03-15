@@ -142,7 +142,8 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect('SUBSTR(post.postTitle,1,1)', 'nametranform');
+      // eslint-disable-next-line prettier/prettier
+      .addSelect(`REPLACE(post.title,/[^a-zA-Z0-9 ]/g, '')`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
