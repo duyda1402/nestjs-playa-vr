@@ -52,7 +52,7 @@ export class VideoService {
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : 'postTitle';
+        : 'nametranform';
     // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
@@ -142,7 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect(`REPLATE(post.postTitle, '\\"',"")`, 'nametranform');
+      .addSelect(`REPLACE(post.postTitle, '\\"',"")`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
