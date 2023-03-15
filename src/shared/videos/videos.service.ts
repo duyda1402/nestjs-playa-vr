@@ -471,5 +471,5 @@ export class VideoService {
     return details;
   }
 
-  private queryReplace = `TRIM("# " FROM post.postTitle)`;
+  private queryReplace = `REPLACE(post.postTitle, "^0-9a-zA-Z","")`;
 }
