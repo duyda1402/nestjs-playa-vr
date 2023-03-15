@@ -142,7 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect(`REPLACE(post.postTitle, '[^a-zA-Z]',"")`, 'nametranform');
+      .addSelect(this.queryReplace, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
@@ -471,5 +471,5 @@ export class VideoService {
     return details;
   }
 
-  private queryReplace = `REPLACE(post.postTitle, '[^a-zA-Z]',"")`;
+  private queryReplace = `TRIM("# " FROM post.postTitle)`;
 }
