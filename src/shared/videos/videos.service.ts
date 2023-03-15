@@ -481,9 +481,9 @@ export class VideoService {
   private query08 = `REPLACE(${this.query07}, "5", '')`;
   private query09 = `REPLACE(${this.query08}, "6", '')`;
   private query10 = `REPLACE(${this.query09}, "7", '')`;
-  private query11 = `REPLACE(${this.query10}, "8'", '')`;
-  private query12 = `REPLACE(${this.query11}, "9'", '')`;
-  private query13 = `REPLACE(${this.query12}, "0'", '')`;
+  private query11 = `REPLACE(${this.query10}, "8", '')`;
+  private query12 = `REPLACE(${this.query11}, "9", '')`;
+  private query13 = `REPLACE(${this.query12}, "0", '')`;
   private query14 = `REPLACE(${this.query13}, "\\(", '')`;
   private query15 = `REPLACE(${this.query14}, "@", '')`;
   private query16 = `REPLACE(${this.query15}, "!", '')`;
@@ -494,5 +494,7 @@ export class VideoService {
   private query21 = `REPLACE(${this.query20}, "}", '')`;
   private query22 = `REPLACE(${this.query21}, ":", '')`;
   private query23 = `REPLACE(${this.query22}, " ", '')`;
-  private queryReplace = this.query23;
+  private query24 = `REPLACE(${this.query23}, "-", '')`;
+  private query25 = `REPLACE(${this.query23}, ".", '')`;
+  private queryReplace = this.query25;
 }
