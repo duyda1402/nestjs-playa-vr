@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostMetaEntity } from 'src/entities/post_meta.entity';
@@ -471,5 +471,27 @@ export class VideoService {
     return details;
   }
 
-  private queryReplace = `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle, '\\"', ''),"\\'",""),"#",""),"\\(",""),".",""),"0",""),"1",""),"2",""),"3",""),"4",""),"5",""),"-","")," ",""),"6",""),"7",""),"8",""),"9",""),":",""),"\\[",""),"\\]",""),"!",""),"\\{",""),"\\}",""),"\\?",""),"@","")`;
+  private queryReplace = this.query22;
+  private query01 = `REPLACE(post.postTitle, '\\"', '')`;
+  private query02 = `REPLACE(${this.query01}, "\\'", '')`;
+  private query03 = `REPLACE(${this.query02}, "#", '')`;
+  private query04 = `REPLACE(${this.query03}, "1", '')`;
+  private query05 = `REPLACE(${this.query04}, "2", '')`;
+  private query06 = `REPLACE(${this.query05}, "3", '')`;
+  private query07 = `REPLACE(${this.query06}, "4", '')`;
+  private query08 = `REPLACE(${this.query07}, "5", '')`;
+  private query09 = `REPLACE(${this.query08}, "6", '')`;
+  private query10 = `REPLACE(${this.query09}, "7", '')`;
+  private query11 = `REPLACE(${this.query10}, "8'", '')`;
+  private query12 = `REPLACE(${this.query11}, "9'", '')`;
+  private query13 = `REPLACE(${this.query12}, "0'", '')`;
+  private query14 = `REPLACE(${this.query13}, "\\(", '')`;
+  private query15 = `REPLACE(${this.query14}, "@", '')`;
+  private query16 = `REPLACE(${this.query15}, "!", '')`;
+  private query17 = `REPLACE(${this.query16}, "\\)", '')`;
+  private query18 = `REPLACE(${this.query17}, "[", '')`;
+  private query19 = `REPLACE(${this.query18}, "]", '')`;
+  private query20 = `REPLACE(${this.query19}, "{", '')`;
+  private query21 = `REPLACE(${this.query20}, "}", '')`;
+  private query22 = `REPLACE(${this.query21}, ":", '')`;
 }
