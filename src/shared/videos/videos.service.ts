@@ -142,7 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect(`TRIM('\\"' FROM post.postTitle)`, 'nametranform');
+      .addSelect(`REPLATE(post.postTitle, '\\"',"")`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
