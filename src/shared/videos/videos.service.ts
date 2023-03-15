@@ -142,7 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect("(TRIM(LEADING '0123456789~`!@#$%^&*()_-+={[}]|:;<,>.?/' FROM post.postTitle)", 'nametranform');
+      .addSelect(`substring(post.title from '[^0-9~\`!@#$%^&*()_-+={[}]|\\:;"<,>.?/].*')`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
