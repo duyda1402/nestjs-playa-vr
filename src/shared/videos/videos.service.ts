@@ -471,5 +471,5 @@ export class VideoService {
     return details;
   }
 
-  private queryReplace = `REPLACE(post.postTitle, "[^0-9a-zA-Z]","")`;
+  private queryReplace = `REPLACE(REGEXP_REPLACE(post.postTitle, '[^0-9a-zA-Z]+', ''), ' ', '')`;
 }
