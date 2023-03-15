@@ -52,7 +52,7 @@ export class VideoService {
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : 'nametranform';
+        : `substring(post.postTitle from '[^0-9~\`!@#$%^&*()_-+={[}]|\\\\:;"<,>.?/].*')`;
     // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
