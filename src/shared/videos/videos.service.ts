@@ -471,5 +471,5 @@ export class VideoService {
     return details;
   }
 
-  private queryReplace = `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle, '\\"', ''),"\\'".""),"#",""),"\\(",""),"2",""),"0",""),"1","")`;
+  private queryReplace = `(REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle, '\\"', ''),"\\'".""),"#",""),"\\(","")`;
 }
