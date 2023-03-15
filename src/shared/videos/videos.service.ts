@@ -52,7 +52,7 @@ export class VideoService {
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : `TRIM(LEADING  '^0-9~\`!@#$%^&*()_-+={[}]|\\\\:;"<,>.?/' FROM post.postTitle`;
+        : 'postTitle';
     // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
@@ -134,14 +134,15 @@ export class VideoService {
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
 
-    queryVideo.select([
-      'post.id as id',
-      'post.postName as postName',
-      'termStudio.name as subtitle',
-      'post.postTitle as postTitle',
-      'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-    ]);
-    // .addSelect(`TRIM(LEADING  '[^0-9~\`!@#$%^&*()_-+={[}]|\\\\:;"<,>.?/].*' FROM post.postTitle)`, 'nametranform');
+    queryVideo
+      .select([
+        'post.id as id',
+        'post.postName as postName',
+        'termStudio.name as subtitle',
+        'post.postTitle as postTitle',
+        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
+      ])
+      .addSelect(`TRIM(LEADING  '^0-9~\`!@#$%^&*()_-+={[}]|\\\\:;"<,>.?/' FROM post.postTitle)`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
