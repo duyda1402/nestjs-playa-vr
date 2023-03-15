@@ -142,8 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      // eslint-disable-next-line prettier/prettier
-      .addSelect(`REPLACE(post.title,/[^a-zA-Z0-9 ]/g, '')`, 'nametranform');
+      .addSelect(`REGEXP_REPLACE(post.title,/[^a-zA-Z0-9 ]/g, '')`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
