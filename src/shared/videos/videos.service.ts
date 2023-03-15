@@ -134,14 +134,15 @@ export class VideoService {
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
 
-    queryVideo.select([
-      'post.id as id',
-      'post.postName as postName',
-      'termStudio.name as subtitle',
-      'post.postTitle as postTitle',
-      'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-    ]);
-    // .addSelect(`substring(post.postTitle from '[^0-9~\`!@#$%^&*()_-+={[}]|\\:;"<,>.?/].*')`, 'nametranform');
+    queryVideo
+      .select([
+        'post.id as id',
+        'post.postName as postName',
+        'termStudio.name as subtitle',
+        'post.postTitle as postTitle',
+        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
+      ])
+      .addSelect(`TRIM('^0-9~\`!@#$%^&*()_-+={[}]|\\\\:;"<,>.?/' FROM post.postTitle)`, 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
@@ -151,6 +152,7 @@ export class VideoService {
 
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
+    console.log(data);
     let content = [];
 
     if (Array.isArray(data) && data.length) {
