@@ -142,10 +142,7 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect(
-        `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle,'\\"', ''),"...",""),"#",""),"\\'",""),"\\(","")`,
-        'nametranform'
-      );
+      .addSelect("(TRIM(LEADING '0123456789~`!@#$%^&*()_-+={[}]|:;<,>.?/' FROM post.title)", 'nametranform');
 
     const dataPromis = queryVideo
       .limit(query.perPage)
@@ -155,7 +152,6 @@ export class VideoService {
 
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
-    console.log(data);
     let content = [];
 
     if (Array.isArray(data) && data.length) {
