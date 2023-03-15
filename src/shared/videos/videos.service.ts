@@ -142,7 +142,10 @@ export class VideoService {
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
       ])
-      .addSelect(`REPLACE(REPLACE(REPLACE(post.postTitle,'\\"', ''),"...",""),"#","")`, 'nametranform');
+      .addSelect(
+        `REPLACE(REPLACE(REPLACE(REPLACE(post.postTitle,'\\"', ''),"...",""),"#",""),"\\'","")`,
+        'nametranform'
+      );
 
     const dataPromis = queryVideo
       .limit(query.perPage)
