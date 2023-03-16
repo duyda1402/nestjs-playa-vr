@@ -142,7 +142,7 @@ export class ActorService {
           .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
           .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'post.id = termRelationPost.objectId')
           .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-          .select('termRela.objectId')
+          .select('termRelation.objectId')
           .getQuery();
         return `tr.objectId IN (${subQuery})`;
       })
