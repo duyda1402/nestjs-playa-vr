@@ -12,6 +12,7 @@ import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { converProperties, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { PostEntity } from 'src/entities/post.entity';
 
 @Injectable()
 export class ActorService {
@@ -147,11 +148,16 @@ export class ActorService {
     const test = await this.termRelationShipsBasicRepository
       .createQueryBuilder('termRelation')
       .where('termRelation.termId = :termRelationId', { termRelationId: actor.id })
+      .innerJoin(PostEntity, 'post', 'post.id = termRelation.objectId')
+      .andWhere('post.postType = :postType', { postType: 'post' })
+      .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
+      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'post.id = termRelationPost.objectId')
+      .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
       .select(['termRelation.objectId'])
       .getRawMany();
 
     console.log('test', test);
-    console.log('studio', studios);
+
     const imageIds = [];
     let aliasGroup = -1;
     const properties: any[] = [];
