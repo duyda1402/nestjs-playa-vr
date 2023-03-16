@@ -21,6 +21,8 @@ export class ActorService {
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
+    @InjectRepository(TermRelationShipsBasicEntity)
+    private readonly termRelationShipsBasicRepository: Repository<TermRelationShipsBasicEntity>,
     private readonly openSearchService: OpenSearchService,
     private readonly commonService: CommonService
   ) {}
@@ -131,6 +133,7 @@ export class ActorService {
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
+          .distinct()
           .from(TermRelationShipsBasicEntity, 'termRela')
           .where('termRela.termId = :termRelaId', { termRelaId: actor.id })
           .select('termRela.objectId')
@@ -141,12 +144,12 @@ export class ActorService {
       .getRawMany();
 
     const [metaRows, studios] = await Promise.all([metaDataPromise, studiosPromise]);
-    // const studioMaps = [];
-    // studios.forEach((item) => {
-    //   const rs = studioMaps.some((value) => value.id === item.id);
-    //   if (!rs) studioMaps.push(item);
-    // });
-
+    const test = await this.termRelationShipsBasicRepository
+      .createQueryBuilder('termRelation')
+      .where('termRelation.termId = :termRelationId', { termRelationId: actor.id })
+      .select('termRelation.objectId')
+      .getMany();
+    console.log(test);
     const imageIds = [];
     let aliasGroup = -1;
     const properties: any[] = [];
