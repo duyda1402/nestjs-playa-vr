@@ -147,9 +147,11 @@ export class ActorService {
     const test = await this.termRelationShipsBasicRepository
       .createQueryBuilder('termRelation')
       .where('termRelation.termId = :termRelationId', { termRelationId: actor.id })
-      .select('termRelation.objectId')
-      .getMany();
-    console.log(test);
+      .select(['termRelation.objectId'])
+      .getRawMany();
+
+    console.log('test', test);
+    console.log('studio', studios);
     const imageIds = [];
     let aliasGroup = -1;
     const properties: any[] = [];
