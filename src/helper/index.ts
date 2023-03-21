@@ -10,7 +10,7 @@ export function convertTimeToSeconds(timeString: string) {
 }
 
 export function isProduction(): boolean {
-  console.log(process.env)
+  console.log(process.env?.env_production)
   return process.env.NODE_ENV === 'production';
 }
 
