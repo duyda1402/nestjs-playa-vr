@@ -10,7 +10,8 @@ export function convertTimeToSeconds(timeString: string) {
 }
 
 export function isProduction(): boolean {
-  return (process as any).env_production.NODE_ENV === 'production';
+  console.log((process as any).env);
+  return process.env.NODE_ENV === 'production';
 }
 
 export function arrayPluck(arr: any[], field: string): any[] {
