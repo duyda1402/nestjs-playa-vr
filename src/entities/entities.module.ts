@@ -14,6 +14,7 @@ import { SubscriptionEntity } from './subscriptions.entity';
 import { PopularScoresEntity } from './popular_scores.entity';
 import { OptionsEntity } from './options.entity';
 import { VideoTrackingEntity } from './video_tracking.entity';
+import { AvgStreamTimesEntity } from './avg_stream_times.entity';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { VideoTrackingEntity } from './video_tracking.entity';
       PopularScoresEntity,
       OptionsEntity,
       VideoTrackingEntity,
+      AvgStreamTimesEntity,
     ]),
   ],
   exports: [
@@ -50,6 +52,7 @@ import { VideoTrackingEntity } from './video_tracking.entity';
       PopularScoresEntity,
       OptionsEntity,
       VideoTrackingEntity,
+      AvgStreamTimesEntity,
     ]),
   ],
 })

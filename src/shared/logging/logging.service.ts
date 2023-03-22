@@ -36,7 +36,7 @@ export class LoggingService {
       if(category.id === 246) {//VR Games
         duration = Number(await this.commonService.getPostMeta(postId, 'game_duration_for_premium'));
       } else {//VR Videos
-        const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
+        const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {streamDate: 'DESC'}});
         if(studioAvgStreamTimeRow) {
           duration = studioAvgStreamTimeRow.premDownloadValue;
         } else {
