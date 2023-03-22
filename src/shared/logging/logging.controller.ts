@@ -20,10 +20,10 @@ export class LoggingController {
   async save(@Req() request: Request, @Ip() userIp, @Body() data: LoggingData): Promise<IFRsp<any>> {
     const isPremiumUser = request.user && request.user['role'] === 'premium';
 
-    console.log(data, userIp, request.user);
     if(isPremiumUser) {
       const hasPremiumContent = await this.commonService.hasPremiumContent(Number(data.video_id));
 
+      console.log(data, hasPremiumContent ? 'Yes' : 'No');
       if(hasPremiumContent) {
         const result = await this.loggingService.save(request.user['sub'], userIp, data);
 
