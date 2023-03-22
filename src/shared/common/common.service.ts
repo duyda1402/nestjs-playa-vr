@@ -449,7 +449,6 @@ export class CommonService {
   async getTheTerm(postId: number, taxonomy: string): Promise<TermEntity | null> {
     const terms = await this.getTheTerms(postId, taxonomy);
 
-    console.log(postId, taxonomy, terms)
     if(terms && terms.length) return terms[0];
 
     return null;
