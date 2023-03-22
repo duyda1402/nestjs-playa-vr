@@ -48,7 +48,7 @@ export class VideoService {
     const paramActor = query.actor ? query.actor : null;
     const paramStudio = query.studio ? query.studio : null;
     const paramTitle = query.title ? query.title : null;
-    const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
+    const direction = (query.direction || '').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     const order =
       query.order === 'popularity'
         ? 'pp.premiumPopularScore'
