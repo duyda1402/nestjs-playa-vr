@@ -158,8 +158,6 @@ export class VideoService {
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    console.log(queryVideo.getQuery())
-
     const countPromise = await queryVideo.getCount();
     const [data, count] = await Promise.all([dataPromis, countPromise]);
 
