@@ -27,6 +27,7 @@ export class VideoService {
     private readonly postMetaRepository: Repository<PostMetaEntity>,
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
+    @InjectRepository(TermRelationShipsBasicEntity)
     private readonly termRelationshipRepo: Repository<TermRelationShipsBasicEntity>,
     private readonly opensearchService: OpenSearchService,
     private readonly commonService: CommonService,

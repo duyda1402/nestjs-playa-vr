@@ -13,8 +13,11 @@ export class LoggingService {
   constructor(
     @InjectRepository(VideoTrackingEntity)
     private readonly videoTrackingRepo: Repository<VideoTrackingEntity>,
+    @InjectRepository(OptionsEntity)
     private readonly optionRepo: Repository<OptionsEntity>,
+    @InjectRepository(AvgStreamTimesEntity)
     private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
+
     private readonly videoService: VideoService,
   ) {}
 
