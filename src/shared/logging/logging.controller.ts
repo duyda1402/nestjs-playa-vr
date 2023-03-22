@@ -23,7 +23,6 @@ export class LoggingController {
     if(isPremiumUser) {
       const hasPremiumContent = await this.commonService.hasPremiumContent(Number(data.video_id));
 
-      console.log(data, hasPremiumContent ? 'Yes' : 'No');
       if(hasPremiumContent) {
         const result = await this.loggingService.save(request.user['sub'], userIp, data);
 
