@@ -16,8 +16,7 @@ export class LoggingService {
     @InjectRepository(OptionsEntity)
     private readonly optionRepo: Repository<OptionsEntity>,
     @InjectRepository(AvgStreamTimesEntity)
-    private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
-
+    private readonly avgStreamTimesRepo: Repository<OptionsEntity>,
     private readonly videoService: VideoService,
   ) {}
 
@@ -37,13 +36,13 @@ export class LoggingService {
       if(category.id === 246) {//VR Games
         duration = Number(await this.videoService.getPostMeta(postId, 'game_duration_for_premium', true));
       } else {//VR Videos
-        const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
-        if(studioAvgStreamTimeRow) {
-          duration = studioAvgStreamTimeRow.premDownloadValue;
-        } else {
+        // const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
+        // if(studioAvgStreamTimeRow) {
+        //   duration = studioAvgStreamTimeRow.premDownloadValue;
+        // } else {
           const defPremDownloadValue = await this.optionRepo.findOne({where: {name: 'default_prem_download_value'}, select: ['value']});
           duration = parseNumber(defPremDownloadValue?.value);
-        }
+        // }
       }
 
       durationCapped = duration;

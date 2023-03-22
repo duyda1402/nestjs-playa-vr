@@ -484,17 +484,24 @@ export class VideoService {
   }
 
   async getTheTerm(postId: number, taxonomy: string): Promise<TermEntity | null> {
-    const query = this.termRepository.createQueryBuilder('t')
+    const terms = await this.getTheTerms(postId, taxonomy);
+
+    if(terms && terms.length) return terms[0];
+
+    return null;
+  }
+
+  async getTheTerms(postId: number, taxonomy: string): Promise<TermEntity[] | null> {
+    return this.termRepository.createQueryBuilder('t')
         .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = t.id')
         .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id')
         .where('tr.objectId = :postId', {postId: postId})
-        .andWhere('tt.taxonomy = :taxonomy', {taxonomy: taxonomy});
-
-    return await query.getOne();
+        .andWhere('tt.taxonomy = :taxonomy', {taxonomy: taxonomy})
+        .getMany();
   }
 
   async getPostMeta(postId: number, metaKey: string, single?: boolean): Promise<string | string[]> {
-      const metaRows = await this.postMetaRepository.findBy({postId: postId, metaKey: metaKey});
+      const metaRows = await this.postMetaRepository.find({where: {postId: postId, metaKey: metaKey}, select: ["metaValue"]});
 
       const values = [];
       metaRows.forEach((v) => {
