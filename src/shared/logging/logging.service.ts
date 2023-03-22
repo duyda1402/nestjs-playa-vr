@@ -17,7 +17,7 @@ export class LoggingService {
     private readonly optionRepo: Repository<OptionsEntity>,
     // @InjectRepository(AvgStreamTimesEntity)
     // private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
-    private readonly videoService: VideoService,
+    private readonly videoService: VideoService
   ) {}
 
   async save(userId, userIp, eventData): Promise<boolean> {
