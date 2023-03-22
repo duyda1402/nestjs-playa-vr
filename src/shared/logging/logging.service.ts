@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { VideoTrackingEntity } from 'src/entities/video_tracking.entity';
 
 import { Repository } from 'typeorm';
-import {VideoService} from "../videos/videos.service";
 import {OptionsEntity} from "../../entities/options.entity";
 // import {AvgStreamTimesEntity} from "../../entities/avg_stream_times.entity";
 import {getCurrentTimestamp, parseNumber} from "../../helper";
+import {CommonService} from "../common/common.service";
 
 @Injectable()
 export class LoggingService {
@@ -17,13 +17,13 @@ export class LoggingService {
     private readonly optionRepo: Repository<OptionsEntity>,
     // @InjectRepository(AvgStreamTimesEntity)
     // private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
-    private readonly videoService: VideoService
+    private readonly commonService: CommonService
   ) {}
 
   async save(userId, userIp, eventData): Promise<boolean> {
     const postId = eventData.video_id;
-    const studio = await this.videoService.getTheTerm(postId, 'studio');
-    const category = await this.videoService.getTheTerm(postId, 'category');
+    const studio = await this.commonService.getTheTerm(postId, 'studio');
+    const category = await this.commonService.getTheTerm(postId, 'category');
     const isDownloadAction = eventData.event_type === 'videoDownloaded';
 
     if(!studio || !category) {
@@ -34,7 +34,7 @@ export class LoggingService {
 
     if(isDownloadAction) {
       if(category.id === 246) {//VR Games
-        duration = Number(await this.videoService.getPostMeta(postId, 'game_duration_for_premium', true));
+        duration = Number(await this.commonService.getPostMeta(postId, 'game_duration_for_premium'));
       } else {//VR Videos
         // const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
         // if(studioAvgStreamTimeRow) {

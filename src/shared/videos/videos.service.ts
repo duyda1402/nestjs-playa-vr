@@ -479,44 +479,6 @@ export class VideoService {
     return details;
   }
 
-  async hasPremiumContent(videoId: number): Promise<boolean> {
-    const rlRow = await this.termRelationshipRepo.createQueryBuilder('tr')
-        .where('tr.objectId = :videoId', {videoId: videoId})
-        .andWhere('tr.termId = 5210')
-        .select(['tr.objectId as pid'])
-        .getRawOne();
-
-    return rlRow && rlRow.pid;
-  }
-
-  async getTheTerm(postId: number, taxonomy: string): Promise<TermEntity | null> {
-    const terms = await this.getTheTerms(postId, taxonomy);
-
-    if(terms && terms.length) return terms[0];
-
-    return null;
-  }
-
-  async getTheTerms(postId: number, taxonomy: string): Promise<TermEntity[] | null> {
-    return this.termRepository.createQueryBuilder('t')
-        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = t.id')
-        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id')
-        .where('tr.objectId = :postId', {postId: postId})
-        .andWhere('tt.taxonomy = :taxonomy', {taxonomy: taxonomy})
-        .getMany();
-  }
-
-  async getPostMeta(postId: number, metaKey: string, single?: boolean): Promise<string | string[]> {
-      const metaRows = await this.postMetaRepository.find({where: {postId: postId, metaKey: metaKey}, select: ["metaValue"]});
-
-      const values = [];
-      metaRows.forEach((v) => {
-          values.push(v.metaValue);
-      });
-
-      return values.length ? (single ? values[0] : values) : null;
-  }
-
   private query01 = `REPLACE(post.postTitle, '\\"', '')`;
   private query02 = `REPLACE(${this.query01}, "\\'", '')`;
   private query03 = `REPLACE(${this.query02}, "#", '')`;

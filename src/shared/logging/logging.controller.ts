@@ -6,13 +6,13 @@ import { LoggingService } from './logging.service';
 import {JwtAuthGuard} from "../../auth/auth.guard";
 import {LoggingData} from "../../types";
 import {Request} from "express";
-import {VideoService} from "../videos/videos.service";
+import {CommonService} from "../common/common.service";
 
 @Controller('')
 export class LoggingController {
   constructor(
       private readonly loggingService: LoggingService,
-      private readonly videoService: VideoService
+      private readonly commonService: CommonService
   ) {}
 
   @Put('/event')
@@ -21,7 +21,7 @@ export class LoggingController {
     const isPremiumUser = request.user && request.user['role'] === 'premium';
 
     if(isPremiumUser) {
-      const hasPremiumContent = await this.videoService.hasPremiumContent(Number(data.video_id));
+      const hasPremiumContent = await this.commonService.hasPremiumContent(Number(data.video_id));
 
       if(hasPremiumContent) {
         const result = await this.loggingService.save(request.user['sub'], userIp, data);
