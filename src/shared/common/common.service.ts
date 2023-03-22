@@ -455,7 +455,7 @@ export class CommonService {
   }
 
   async getTheTerms(postId: number, taxonomy: string): Promise<TermEntity[] | null> {
-    return this.termRepository.createQueryBuilder('t')
+    return await this.termRepository.createQueryBuilder('t')
         .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = t.id')
         .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id')
         .where('tr.objectId = :postId', {postId: postId})
