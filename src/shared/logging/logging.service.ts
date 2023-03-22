@@ -4,7 +4,7 @@ import { VideoTrackingEntity } from 'src/entities/video_tracking.entity';
 
 import { Repository } from 'typeorm';
 import {OptionsEntity} from "../../entities/options.entity";
-// import {AvgStreamTimesEntity} from "../../entities/avg_stream_times.entity";
+import {AvgStreamTimesEntity} from "../../entities/avg_stream_times.entity";
 import {getCurrentTimestamp, parseNumber} from "../../helper";
 import {CommonService} from "../common/common.service";
 
@@ -15,8 +15,8 @@ export class LoggingService {
     private readonly videoTrackingRepo: Repository<VideoTrackingEntity>,
     @InjectRepository(OptionsEntity)
     private readonly optionRepo: Repository<OptionsEntity>,
-    // @InjectRepository(AvgStreamTimesEntity)
-    // private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
+    @InjectRepository(AvgStreamTimesEntity)
+    private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
     private readonly commonService: CommonService
   ) {}
 
@@ -26,7 +26,6 @@ export class LoggingService {
     const category = await this.commonService.getTheTerm(postId, 'category');
     const isDownloadAction = eventData.event_type === 'videoDownloaded';
 
-    console.log(postId, studio, category);
     if(!studio || !category) {
       return false;
     }
@@ -37,13 +36,13 @@ export class LoggingService {
       if(category.id === 246) {//VR Games
         duration = Number(await this.commonService.getPostMeta(postId, 'game_duration_for_premium'));
       } else {//VR Videos
-        // const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
-        // if(studioAvgStreamTimeRow) {
-        //   duration = studioAvgStreamTimeRow.premDownloadValue;
-        // } else {
+        const studioAvgStreamTimeRow = await this.avgStreamTimesRepo.findOne({where: {studio: studio.slug}, select: ['premDownloadValue'], order: {date: 'DESC'}});
+        if(studioAvgStreamTimeRow) {
+          duration = studioAvgStreamTimeRow.premDownloadValue;
+        } else {
           const defPremDownloadValue = await this.optionRepo.findOne({where: {name: 'default_prem_download_value'}, select: ['value']});
           duration = parseNumber(defPremDownloadValue?.value);
-        // }
+        }
       }
 
       durationCapped = duration;
