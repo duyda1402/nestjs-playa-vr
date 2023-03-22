@@ -5,7 +5,7 @@ import { VideoTrackingEntity } from 'src/entities/video_tracking.entity';
 import { Repository } from 'typeorm';
 import {VideoService} from "../videos/videos.service";
 import {OptionsEntity} from "../../entities/options.entity";
-import {AvgStreamTimesEntity} from "../../entities/avg_stream_times.entity";
+// import {AvgStreamTimesEntity} from "../../entities/avg_stream_times.entity";
 import {getCurrentTimestamp, parseNumber} from "../../helper";
 
 @Injectable()
@@ -15,8 +15,8 @@ export class LoggingService {
     private readonly videoTrackingRepo: Repository<VideoTrackingEntity>,
     @InjectRepository(OptionsEntity)
     private readonly optionRepo: Repository<OptionsEntity>,
-    @InjectRepository(AvgStreamTimesEntity)
-    private readonly avgStreamTimesRepo: Repository<OptionsEntity>,
+    // @InjectRepository(AvgStreamTimesEntity)
+    // private readonly avgStreamTimesRepo: Repository<AvgStreamTimesEntity>,
     private readonly videoService: VideoService,
   ) {}
 
