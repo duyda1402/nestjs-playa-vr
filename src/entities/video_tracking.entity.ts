@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {DateMathTime} from "@opensearch-project/opensearch/api/types";
 
 @Entity({ name: 'video_tracking' })
 export class VideoTrackingEntity {
@@ -47,8 +48,8 @@ export class VideoTrackingEntity {
   @Column()
   nfaction: number;
 
-  @Column()
-  created: number;
+  @Column({type: 'datetime'})
+  created: string;
 
   @Column({ name: 'studio_id' })
   studioId: number;
