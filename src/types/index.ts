@@ -9,3 +9,10 @@ export type QueryBody = {
   direction?: string;
   title?: string;
 };
+
+export type LoggingData = {
+  event_type: "videoDownloaded" | "videoStreamEnd";
+  video_id: number;
+  video_quality: string;
+  duration: number;
+};

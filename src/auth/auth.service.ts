@@ -26,7 +26,8 @@ export class AuthService {
       throw new AuthFailedException('Invalid credentials');
     }
     // Tạo token và trả về cho controller
-    const payload = { username: user.userLogin, sub: user.id };
+    const userRole = await this.userService.getUserRole(user.id);
+    const payload = { username: user.userLogin, sub: user.id, role: userRole};
     const token = await this.generateToken(payload);
     return { status: { code: 1, message: 'Login successful' }, data: token };
   }
@@ -36,7 +37,9 @@ export class AuthService {
       const playload = await this.jwtService.verifyAsync(token, { secret: 'rt-secret' });
       const user = await this.userService.findUserByUsername({ id: playload['sub'] });
       if (!user) throw new UnauthorizedException();
-      const tokenNew = this.generateToken({ sub: user.id, username: user.userLogin });
+
+      const userRole = await this.userService.getUserRole(user.id);
+      const tokenNew = this.generateToken({ sub: user.id, username: user.userLogin, role: userRole });
       // xử lý logic tại đây, ví dụ như lưu token mới trong database.
       return tokenNew;
     } catch (error) {

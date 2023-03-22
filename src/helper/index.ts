@@ -13,6 +13,10 @@ export function isProduction(): boolean {
   return process.env.NODE_ENV === 'production' || process.env.DB_DATABASE === 'vrporn_live';
 }
 
+export function getCurrentTimestamp(): number {
+  return Math.round(Date.now() / 1000);
+}
+
 export function arrayPluck(arr: any[], field: string): any[] {
   return arr.map((v) => v[field]);
 }

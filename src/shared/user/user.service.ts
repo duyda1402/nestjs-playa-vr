@@ -6,6 +6,7 @@ import { IFUserProfile } from 'src/types';
 import { UserMetaEntity } from 'src/entities/user_meta.entity';
 import { SubscriptionEntity } from 'src/entities/subscriptions.entity';
 import { JwtService } from '@nestjs/jwt';
+import {unserialize} from "php-serialize";
 
 @Injectable()
 export class UserService {
@@ -35,26 +36,9 @@ export class UserService {
   }
   async findUserInfo(userId: number): Promise<any> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    const subPromise = this.subRepository
-      .createQueryBuilder('sub')
-      .where('sub.userId = :userId', { userId: userId })
-      .andWhere('sub.studioId = :studioId', { studioId: userId })
-      .getOne();
-    const metaPromise = this.userRepository
-      .createQueryBuilder('user')
-      .where('user.id = :userId', { userId: userId })
-      .leftJoinAndSelect(UserMetaEntity, 'um', 'um.userId = user.id')
-      .andWhere('um.metaKey = :metaKey', { metaKey: 'wp_rkr3j35p5r_capabilities' })
-      .andWhere('um.metaValue LIKE :metaValue', { metaValue: '%premium_member%' })
-      .getOne();
-    const [sub, metaValue] = await Promise.all([subPromise, metaPromise]);
-    if (!sub && !metaValue) return { ...user, role: 'free' };
-    if (metaValue) return { ...user, role: 'premium' };
-    if (sub && !sub.endDate) return { ...user, role: 'premium' };
-    const curDate = new Date(sub.endDate).getTime();
-    const nowDate = Date.now();
-    if (sub && curDate >= nowDate) return { ...user, role: 'premium' };
-    return { ...user, role: 'free' };
+    const role = await this.getUserRole(userId);
+
+    return { ...user, role: role };
   }
 
   async findUserByUsername(where: any): Promise<UserEntity | null> {
@@ -78,5 +62,39 @@ export class UserService {
     // } catch (err) {
     //   return 0;
     // }
+  }
+
+  async getUserRole(userId): Promise<string> {
+    let userRole = 'free';
+
+    const sub = await this.subRepository
+        .createQueryBuilder('sub')
+        .where('sub.userId = :userId', { userId: userId })
+        .andWhere('sub.studioId = :studioId', { studioId: 5210 })
+        .andWhere('(end_datetime >= NOW() OR end_datetime IS NULL)')
+        .select(['sub.userId as id'])
+        .getRawOne();
+
+    if(sub && sub.id) {
+      userRole = 'premium';
+    } else {
+      const metaRow = await this.userRepository
+          .createQueryBuilder('user')
+          .where('user.id = :userId', { userId: userId })
+          .leftJoinAndSelect(UserMetaEntity, 'um', 'um.userId = user.id')
+          .andWhere('um.metaKey = :metaKey', { metaKey: 'wp_rkr3j35p5r_capabilities' })
+          .select(['um.metaValue as `value`'])
+          .getRawOne();
+
+      if(metaRow && metaRow.value) {
+        const caps = unserialize(metaRow.value);
+
+        if(Array.isArray(caps) && caps.length && caps.indexOf('premium-give-away') !== -1) {
+          userRole = 'premium';
+        }
+      }
+    }
+
+    return userRole;
   }
 }

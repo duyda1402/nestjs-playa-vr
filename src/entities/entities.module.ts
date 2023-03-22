@@ -13,6 +13,7 @@ import { As3cfItemsEntity } from './as3cf_items.entity';
 import { SubscriptionEntity } from './subscriptions.entity';
 import { PopularScoresEntity } from './popular_scores.entity';
 import { OptionsEntity } from './options.entity';
+import { VideoTrackingEntity } from './video_tracking.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { OptionsEntity } from './options.entity';
       SubscriptionEntity,
       PopularScoresEntity,
       OptionsEntity,
+      VideoTrackingEntity,
     ]),
   ],
   exports: [
@@ -47,6 +49,7 @@ import { OptionsEntity } from './options.entity';
       SubscriptionEntity,
       PopularScoresEntity,
       OptionsEntity,
+      VideoTrackingEntity,
     ]),
   ],
 })
