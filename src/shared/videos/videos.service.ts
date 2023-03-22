@@ -54,7 +54,7 @@ export class VideoService {
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : 'nametranform';
+        : 'title';
     // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
@@ -143,12 +143,18 @@ export class VideoService {
         'termStudio.name as subtitle',
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-      ])
-      .addSelect(this.queryReplace, 'nametranform');
+      ]);
+      // .addSelect(this.queryReplace, 'nametranform');
+
+    if(order === 'title') {
+      queryVideo.orderBy('CAST(postName AS UNSIGNED)', 'ASC');
+      queryVideo.orderBy('postName', direction);
+    } else {
+      queryVideo.orderBy(order, direction);
+    }
 
     const dataPromis = queryVideo
       .limit(query.perPage)
-      .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
