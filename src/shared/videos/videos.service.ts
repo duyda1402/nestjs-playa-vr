@@ -147,8 +147,8 @@ export class VideoService {
       // .addSelect(this.queryReplace, 'nametranform');
 
     if(order === 'title') {
-      queryVideo.orderBy('CAST(postName AS UNSIGNED)', 'ASC');
-      queryVideo.orderBy('postName', direction);
+      queryVideo.orderBy('CAST(post.postName AS UNSIGNED)', 'ASC');
+      queryVideo.addOrderBy('post.postName', direction);
     } else {
       queryVideo.orderBy(order, direction);
     }
