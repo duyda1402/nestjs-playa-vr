@@ -53,8 +53,4 @@ export class VideoTrackingEntity {
 
   @Column({ name: 'studio_id' })
   studioId: number;
-
-  @Column({ name: 'user_agent' })
-  userAgent: string;
-
 }
