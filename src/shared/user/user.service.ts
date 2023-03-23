@@ -89,7 +89,7 @@ export class UserService {
       if(metaRow && metaRow.value) {
         const caps = unserialize(metaRow.value);
 
-        if(Array.isArray(caps) && caps.length && Object.keys(caps).indexOf('premium-give-away') !== -1) {
+        if(caps && Object.keys(caps).indexOf('premium-give-away') !== -1) {
           userRole = 'premium';
         }
       }
