@@ -26,7 +26,6 @@ export class LoggingService {
     const category = await this.commonService.getTheTerm(postId, 'category');
     const isDownloadAction = eventData.event_type === 'videoDownloaded';
 
-    console.log(postId, category, studio)
     if(!studio || !category) {
       return false;
     }
