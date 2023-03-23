@@ -86,9 +86,11 @@ export class UserService {
           .select(['um.metaValue as `value`'])
           .getRawOne();
 
+      console.log(metaRow)
       if(metaRow && metaRow.value) {
         const caps = unserialize(metaRow.value);
 
+        console.log(caps);
         if(Array.isArray(caps) && caps.length && caps.indexOf('premium-give-away') !== -1) {
           userRole = 'premium';
         }
