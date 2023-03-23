@@ -49,7 +49,7 @@ export class VideoController {
 
   @Get('/video/:id')
   @UseGuards(JwtUserGuard)
-  async getStudiDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {
+  async getVideoDetail(@Param('id') postId: string, @Req() request: Request): Promise<IFRsp<IFVideoView>> {
     let result = null;
     if (request.user) {
       result = await this.videoService.getVideoDetail(postId, request.user['sub']);

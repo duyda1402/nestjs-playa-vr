@@ -206,8 +206,8 @@ export class CommonService {
       }
 
       //Paid 5K
-      if (fieldsMap.free_embed_video_5k) {
-        videoData.five_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+      if (fieldsMap.paid_embed_video_5k) {
+        videoData.five_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.paid_embed_video_5k);
       }
 
       //Free Original
