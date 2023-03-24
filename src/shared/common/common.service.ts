@@ -325,19 +325,23 @@ export class CommonService {
         }
 
         if (v.download) {
-          videoLinks.push({
+          const downloadItem = {
             is_stream: false,
             is_download: true,
-            url:
-              userLevel < v.ul || type === 'full'
-                ? null
-                : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
+            url: userLevel < v.ul || type === 'full' ? null : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
             unavailable_reason: reason,
             projection: projection,
             stereo: stereo,
             quality_name: v.quality,
             quality_order: v.ord,
-          });
+          };
+
+          if(userLevel === 0) {
+            downloadItem.url = null;
+            downloadItem.unavailable_reason = 'login';
+          }
+
+          videoLinks.push(downloadItem);
         }
       }
     });
