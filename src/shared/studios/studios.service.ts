@@ -91,7 +91,8 @@ export class StudiosService {
             .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
             .getQuery();
           return `postForStudio.id NOT IN (${subQuery})`;
-        });
+        })
+        .getQuery();
       return `(${subQuery}) > 0`;
     });
     if (query.order === 'popularity') {
