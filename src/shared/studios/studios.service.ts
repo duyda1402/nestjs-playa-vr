@@ -62,19 +62,27 @@ export class StudiosService {
           .where('tr.termId = term.id');
       }, 'popularity');
     }
-    studioQuery
-      .addSelect((subQuery) => {
-        return subQuery
-          .select('COUNT(postForStudio.id)', 'total')
-          .from(PostEntity, 'postForStudio')
-          .where('postForStudio.postType = :postType', { postType: 'post' })
-          .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-          .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-          .andWhere('trStudioPost.termId = term.id')
-          .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-          .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
-      }, 'total')
-      .having('total > 0');
+    studioQuery.addSelect((subQuery) => {
+      return subQuery
+        .select('COUNT(postForStudio.id)', 'total')
+        .from(PostEntity, 'postForStudio')
+        .where('postForStudio.postType = :postType', { postType: 'post' })
+        .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+        .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+        .andWhere('trStudioPost.termId = term.id')
+        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .from(TermRelationShipsBasicEntity, 'termPostExist')
+            .where(`termPostExist.termId IN(:...ids)`, { ids: [4244, 5685] })
+            .select('termPostExist.objectId')
+            .getQueryAndParameters();
+          return `post.id NOT IN (${subQuery})`;
+        });
+    }, 'total');
+    // .having('total > 0');
     // .groupBy('term.id')
 
     const dataPromise = studioQuery

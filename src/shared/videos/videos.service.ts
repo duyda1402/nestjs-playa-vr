@@ -1,4 +1,4 @@
-import { Injectable, Query } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostMetaEntity } from 'src/entities/post_meta.entity';
