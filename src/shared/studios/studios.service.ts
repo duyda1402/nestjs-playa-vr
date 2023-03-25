@@ -53,26 +53,26 @@ export class StudiosService {
 
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
 
-    studioQuery.addSelect((subQuery) => {
-      return subQuery
-        .select('COUNT(postForStudio.id)', 'resultCount')
-        .from(PostEntity, 'postForStudio')
-        .where('postForStudio.postType = :postType', { postType: 'post' })
-        .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-        .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-        .andWhere('trStudioPost.termId = term.id')
-        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-        .andWhere((qb) => {
-          const subQuery = qb
-            .subQuery()
-            .select('termPostExist.objectId')
-            .from(TermRelationShipsBasicEntity, 'termPostExist')
-            .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
-            .getQuery();
-          return `postForStudio.id NOT IN (${subQuery})`;
-        });
-    }, 'totalvideos');
+    // studioQuery.addSelect((subQuery) => {
+    //   return subQuery
+    //     .select('COUNT(postForStudio.id)', 'resultCount')
+    //     .from(PostEntity, 'postForStudio')
+    //     .where('postForStudio.postType = :postType', { postType: 'post' })
+    //     .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+    //     .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+    //     .andWhere('trStudioPost.termId = term.id')
+    //     .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+    //     .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
+    //     .andWhere((qb) => {
+    //       const subQuery = qb
+    //         .subQuery()
+    //         .select('termPostExist.objectId')
+    //         .from(TermRelationShipsBasicEntity, 'termPostExist')
+    //         .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
+    //         .getQuery();
+    //       return `postForStudio.id NOT IN (${subQuery})`;
+    //     });
+    // }, 'totalvideos');
     studioQuery.where((qb) => {
       const subQuery = qb
         .select('COUNT(postForStudio.id)', 'resultCount')
