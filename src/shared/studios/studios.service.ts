@@ -95,7 +95,7 @@ export class StudiosService {
         return `postForStudio.id NOT IN (${subQuery})`;
       })
       .select(['termRelationPost.termId as tids'])
-      .having('COUNT(postForStudio.id) > :count', { count: 0 })
+      .having('COUNT(postForStudio.id) = :count', { count: 0 })
       .groupBy('postForStudio.id')
       .getQueryAndParameters();
 
