@@ -71,9 +71,11 @@ export class StudiosService {
               .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
               .getQuery();
             return `postForStudio.id NOT IN (${subQuery})`;
-          });
-      }, 'total')
-      .having('totalvideos > :count', { count: 0 });
+          })
+          .addGroupBy('term.id');
+      }, 'totalvideos')
+      .addSelect('totalvideos', 'totalvideos_tmp') // Đặt tên trường tạm thời là 'totalvideos_tmp'
+      .having('totalvideos_tmp > :count', { count: 0 });
     // .groupBy('term.id');
 
     if (query.order === 'popularity') {
