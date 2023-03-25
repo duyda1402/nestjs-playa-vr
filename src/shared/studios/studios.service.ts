@@ -48,7 +48,7 @@ export class StudiosService {
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
       .addSelect((subQuery) => {
         return subQuery
-          .select('COUNT(postForStudio.id)', 'total')
+          .select('SUM(postForStudio.id)', 'total')
           .from(PostEntity, 'postForStudio')
           .innerJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
           .where('trStudioPost.termId = term.id')
