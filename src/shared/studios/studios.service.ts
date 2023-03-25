@@ -73,8 +73,8 @@ export class StudiosService {
             return `postForStudio.id NOT IN (${subQuery})`;
           });
       }, 'totalvideos')
-      .groupBy('totalvideos')
-      .having('SUM(totalvideos) > 0');
+      .groupBy('totalvideos');
+    // .having('totalvideos > 0');
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
