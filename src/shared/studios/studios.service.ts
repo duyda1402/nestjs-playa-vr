@@ -75,7 +75,7 @@ export class StudiosService {
           .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
       }, 'totalPost')
       .groupBy('term.id')
-      .having('totalPosts > 0');
+      .having('totalPost > 0');
     // .andWhere('totalPost > 0');
     const dataPromise = studioQuery
       .limit(query.perPage)
