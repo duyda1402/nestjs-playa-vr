@@ -55,7 +55,7 @@ export class StudiosService {
     studioQuery
       .addSelect((subQuery) => {
         return subQuery
-          .select('COUNT(postForStudio.id)', 'totalvideos')
+          .select('COUNT(postForStudio.id)')
           .from(PostEntity, 'postForStudio')
           .where('postForStudio.postType = :postType', { postType: 'post' })
           .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
@@ -73,7 +73,8 @@ export class StudiosService {
             return `postForStudio.id NOT IN (${subQuery})`;
           });
       }, 'totalvideos')
-      .groupBy('term.id');
+      .groupBy('term.id')
+      .addGroupBy('totalvideos');
     // .having('totalvideos > 0');
 
     if (query.order === 'popularity') {
