@@ -77,7 +77,7 @@ export class VideoService {
       //=================  lọc điều kiện video
       .where('post.postType = "post" AND post.postStatus = "publish"')
       .andWhere('tr.termId = :termRelationId', { termRelationId: 251 }) //VR Videos condition
-      .andWhere('tr2.termId = :termRelationId', { termRelationId: 5210 }); //Premium condition
+      .andWhere('tr2.termId = :termPremiumRelationId', { termPremiumRelationId: 5210 }); //Premium condition
 
     if (paramTitle) {
       queryVideo.andWhere('post.postTitle LIKE :videoName', { videoName: `%${paramTitle}%` });
