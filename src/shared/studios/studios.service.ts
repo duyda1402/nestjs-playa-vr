@@ -52,9 +52,10 @@ export class StudiosService {
     }
 
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
+
     studioQuery.addSelect((subQuery) => {
       return subQuery
-        .select('COUNT(postForStudio.id)', 'totalvideos')
+        .select('COUNT(postForStudio.id)', 'resultCount')
         .from(PostEntity, 'postForStudio')
         .where('postForStudio.postType = :postType', { postType: 'post' })
         .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
@@ -70,8 +71,7 @@ export class StudiosService {
             .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
             .getQuery();
           return `postForStudio.id NOT IN (${subQuery})`;
-        })
-        .addGroupBy('term.id');
+        });
     }, 'totalvideos');
 
     // .groupBy('term.id');
@@ -87,8 +87,6 @@ export class StudiosService {
     }
 
     const dataPromise = studioQuery
-      .addSelect('totalvideos', 'totalvideos_tmp')
-      .having('totalvideos_tmp > :count', { count: 0 })
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
@@ -97,6 +95,7 @@ export class StudiosService {
     const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
     console.log(data);
+
     let content = [];
     const imageIds = [],
       imageStudioMap: any = {};
