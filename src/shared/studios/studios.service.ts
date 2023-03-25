@@ -94,7 +94,8 @@ export class StudiosService {
           return `postForStudio.id NOT IN (${subQuery})`;
         })
         // .addSelect('COUNT(postForStudio.id)', 'resultCount')
-        .where('COUNT(postForStudio.id) > :count', { count: 0 })
+        //.where('COUNT(postForStudio.id) > :count', { count: 0 })
+        .having('COUNT(postForStudio.id) > :count', { count: 0 })
         .groupBy('postForStudio.id')
         .getQuery();
       return `term.id NOT IN (${subQuery})`;
