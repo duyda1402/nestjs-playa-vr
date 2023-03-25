@@ -85,13 +85,13 @@ export class StudiosService {
     // .groupBy('term.id')
 
     const dataPromise = studioQuery
-      .having('totalvideos > 0')
+
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    const countPromise = studioQuery.having('totalvideos > 0').getCount();
+    const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
     console.log(data);
     let content = [];
