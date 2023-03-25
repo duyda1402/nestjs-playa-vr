@@ -65,7 +65,13 @@ export class StudiosService {
       .andWhere('postForStudio.postType = :postType', { postType: 'post' })
       .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
       .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost251', 'postForStudio.id = termRelationPost251.objectId')
+      .leftJoin(
+        TermRelationShipsBasicEntity,
+        'termRelationPost5210',
+        'postForStudio.id = termRelationPost5210.objectId'
+      )
       .andWhere('termRelationPost251.termId = :termPostId', { termPostId: 251 })
+      .andWhere('termRelationPost5210.termId = :termPostPremiumId', { termPostPremiumId: 5210 })
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
