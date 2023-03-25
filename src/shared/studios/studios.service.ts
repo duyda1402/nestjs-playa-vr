@@ -83,7 +83,7 @@ export class StudiosService {
 
     const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-
+    console.log(data);
     let content = [];
     const imageIds = [],
       imageStudioMap: any = {};
