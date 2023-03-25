@@ -47,8 +47,6 @@ export class StudiosService {
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
 
-    // .andWhere('totalPost > :totalYes', { totalYes: 0 });
-
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
@@ -64,8 +62,7 @@ export class StudiosService {
           .where('tr.termId = term.id');
       }, 'popularity');
     }
-
-    const dataPromise = studioQuery
+    studioQuery
       .addSelect((subQuery) => {
         return subQuery
           .select('COUNT(postForStudio.id)', 'total')
@@ -77,6 +74,8 @@ export class StudiosService {
           .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
           .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
       }, 'totalPost')
+      .andWhere('totalPost !== 0');
+    const dataPromise = studioQuery
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
