@@ -52,19 +52,9 @@ export class StudiosService {
     }
 
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
-    studioQuery.groupBy('id').addGroupBy('name').addGroupBy('image');
-    if (query.order === 'popularity') {
-      studioQuery.addSelect((subQuery) => {
-        return subQuery
-          .select('SUM(pp.premiumPopularScore)', 'result')
-          .from(PopularScoresEntity, 'pp')
-          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
-          .where('tr.termId = term.id');
-      }, 'popularity');
-    }
-    studioQuery.andHaving('total_videos > 0').addSelect((subQuery) => {
+    studioQuery.addSelect((subQuery) => {
       return subQuery
-        .select('COUNT(postForStudio.id)', 'total_videos')
+        .select('COUNT(postForStudio.id)', 'totalvideos')
         .from(PostEntity, 'postForStudio')
         .where('postForStudio.postType = :postType', { postType: 'post' })
         .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
@@ -81,16 +71,27 @@ export class StudiosService {
             .getQuery();
           return `postForStudio.id NOT IN (${subQuery})`;
         });
-    }, 'total_videos');
+    }, 'totalvideos');
+
+    if (query.order === 'popularity') {
+      studioQuery.addSelect((subQuery) => {
+        return subQuery
+          .select('SUM(pp.premiumPopularScore)', 'result')
+          .from(PopularScoresEntity, 'pp')
+          .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
+          .where('tr.termId = term.id');
+      }, 'popularity');
+    }
     // .groupBy('term.id')
 
     const dataPromise = studioQuery
+      .having('totalvideos > 0')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    const countPromise = studioQuery.getCount();
+    const countPromise = studioQuery.having('totalvideos > 0').getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
     console.log(data);
     let content = [];
