@@ -73,9 +73,27 @@ export class StudiosService {
           return `postForStudio.id NOT IN (${subQuery})`;
         });
     }, 'totalvideos');
-
-    // .groupBy('term.id');
-
+    studioQuery.where((qb) => {
+      const subQuery = qb
+        .select('COUNT(postForStudio.id)', 'resultCount')
+        .from(PostEntity, 'postForStudio')
+        .where('postForStudio.postType = :postType', { postType: 'post' })
+        .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+        .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+        .andWhere('trStudioPost.termId = term.id')
+        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('termPostExist.objectId')
+            .from(TermRelationShipsBasicEntity, 'termPostExist')
+            .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
+            .getQuery();
+          return `postForStudio.id NOT IN (${subQuery})`;
+        });
+      return `(${subQuery}) > 0`;
+    });
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
         return subQuery
