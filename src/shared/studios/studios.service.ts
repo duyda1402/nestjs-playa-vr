@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { PostEntity } from 'src/entities/post.entity';
 
 @Injectable()
 export class StudiosService {
@@ -44,7 +45,19 @@ export class StudiosService {
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
-      .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
+      .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(postForStudio.id)', 'total')
+          .from(PostEntity, 'postForStudio')
+          .innerJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+          .where('trStudioPost.termId = term.id')
+          .andWhere('postForStudio.postType = :postType', { postType: 'post' })
+          .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+          .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+          .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
+      }, 'totalPost')
+      .andWhere('totalPost > :totalYes', { totalYes: 0 });
 
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });

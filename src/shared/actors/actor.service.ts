@@ -150,18 +150,6 @@ export class ActorService {
       .getRawMany();
 
     const [metaRows, studios] = await Promise.all([metaDataPromise, studiosPromise]);
-    // const test = await this.termRelationShipsBasicRepository
-    //   .createQueryBuilder('termRelation')
-    //   .where('termRelation.termId = :termRelationId', { termRelationId: actor.id })
-    //   .innerJoin(PostEntity, 'post', 'post.id = termRelation.objectId')
-    //   .andWhere('post.postType = :postType', { postType: 'post' })
-    //   .andWhere('post.postStatus = :postStatus', { postStatus: 'publish' })
-    //   .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'post.id = termRelationPost.objectId')
-    //   .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-    //   .select(['termRelation.objectId'])
-    //   .getRawMany();
-
-    // console.log('test', test);
 
     const imageIds = [];
     let aliasGroup = -1;
