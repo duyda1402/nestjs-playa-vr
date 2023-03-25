@@ -98,6 +98,7 @@ export class StudiosService {
         .having('COUNT(postForStudio.id) > :count', { count: 0 })
         .groupBy('postForStudio.id')
         .getQuery();
+      console.log(subQuery);
       return `term.id NOT IN (${subQuery})`;
     });
 
