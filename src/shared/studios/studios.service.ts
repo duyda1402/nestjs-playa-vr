@@ -52,36 +52,18 @@ export class StudiosService {
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
-    studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image', 'term.id as tid']);
-    // studioQuery.where((qb) => {
-    //   const subQuery = qb
-    //     .select('termRelationPost.termId')
-    //     .from(PostEntity, 'postForStudio')
-    //     .where('postForStudio.postType = :postType', { postType: 'post' })
-    //     .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-    //     .innerJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-    //     .andWhere('trStudioPost.termId = term.id')
-    //     .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-    //     .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-    //     .andWhere((qb) => {
-    //       const subQuery = qb
-    //         .subQuery()
-    //         .select('termPostExist.objectId')
-    //         .from(TermRelationShipsBasicEntity, 'termPostExist')
-    //         .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
-    //         .getQuery();
-    //       return `postForStudio.id NOT IN (${subQuery})`;
-    //     })
-    //     // .addSelect('COUNT(postForStudio.id)', 'resultCount')
-    //     //.where('COUNT(postForStudio.id) > :count', { count: 0 })
-    //     .having('COUNT(postForStudio.id) > :count', { count: 0 })
-    //     .groupBy('postForStudio.id')
-    //     .getQuery();
-    //   return `term.id NOT IN (${subQuery})`;
-    // });
-    const subQuery3 = await this.termRepository
-      .createQueryBuilder('termStudio')
-      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'termStudio.id = termRelationPost.termId')
+    studioQuery.select([
+      'term.slug as id',
+      'term.name as name',
+      'tm.metaValue as image',
+      'term.id as tid',
+      'COUNT(postForStudio.id) as total',
+    ]);
+
+    // const subQuery3 = await this.termRepository
+    //   .createQueryBuilder('term')
+    studioQuery
+      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'term.id = termRelationPost.termId')
       .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
       .where('postForStudio.postType = :postType', { postType: 'post' })
       .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
@@ -96,12 +78,12 @@ export class StudiosService {
           .getQuery();
         return `postForStudio.id NOT IN (${subQuery})`;
       })
-      .select(['termStudio.id as tids', 'termStudio.slug as slug', 'COUNT(postForStudio.id) as total'])
+      // .select(['term.id as tids', 'term.slug as slug', 'COUNT(postForStudio.id) as total'])
       // .having('COUNT(postForStudio.id) = :count', { count: 0 })
-      .groupBy('termStudio.id')
-      .getRawMany();
-    // .getQueryAndParameters();
-    console.log(subQuery3);
+      .groupBy('term.id');
+    //   .getRawMany();
+    //  .getQueryAndParameters();
+    // cocnsole.log(subQuery3);
     // studioQuery.andWhere(`term.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
 
     if (query.order === 'popularity') {
