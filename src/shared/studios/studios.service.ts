@@ -95,6 +95,7 @@ export class StudiosService {
         })
         // .addSelect('COUNT(postForStudio.id)', 'resultCount')
         .where('COUNT(postForStudio.id) > :count', { count: 0 })
+        .groupBy('postForStudio.id')
         .getQuery();
       return `term.id NOT IN (${subQuery})`;
     });
