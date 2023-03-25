@@ -74,7 +74,7 @@ export class StudiosService {
           .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
           .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
       }, 'totalPost')
-      .andWhere('totalPost !== 0');
+      .having('totalPosts > 0');
     const dataPromise = studioQuery
       .limit(query.perPage)
       .orderBy(order, direction)
