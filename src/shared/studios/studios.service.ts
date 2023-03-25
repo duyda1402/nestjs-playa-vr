@@ -79,12 +79,14 @@ export class StudiosService {
     //     .getQuery();
     //   return `term.id NOT IN (${subQuery})`;
     // });
-    const subQuery3 = this.postRepository
-      .createQueryBuilder('postForStudio')
+    const subQuery3 = this.termRepository
+      .createQueryBuilder('termStudio')
+      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'termStudio.id = termRelationPost.termId')
+      .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
       .where('postForStudio.postType = :postType', { postType: 'post' })
       .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-      .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
+      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost251', 'postForStudio.id = termRelationPost251.objectId')
+      .andWhere('termRelationPost251.termId = :termPostId', { termPostId: 251 })
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
@@ -94,9 +96,9 @@ export class StudiosService {
           .getQuery();
         return `postForStudio.id NOT IN (${subQuery})`;
       })
-      .select(['termRelationPost.termId as tids'])
+      .select(['termStudio.id as tids'])
       .having('COUNT(postForStudio.id) = :count', { count: 0 })
-      .groupBy('postForStudio.id')
+      .groupBy('termStudio.id')
       .getQueryAndParameters();
 
     studioQuery.andWhere(`term.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
