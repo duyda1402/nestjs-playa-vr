@@ -46,43 +46,19 @@ export class StudiosService {
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
-
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
-
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
-
-    // studioQuery.addSelect((subQuery) => {
-    //   return subQuery
-    //     .select('COUNT(postForStudio.id)', 'resultCount')
-    //     .from(PostEntity, 'postForStudio')
-    //     .where('postForStudio.postType = :postType', { postType: 'post' })
-    //     .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-    //     .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-    //     .andWhere('trStudioPost.termId = term.id')
-    //     .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-    //     .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-    //     .andWhere((qb) => {
-    //       const subQuery = qb
-    //         .subQuery()
-    //         .select('termPostExist.objectId')
-    //         .from(TermRelationShipsBasicEntity, 'termPostExist')
-    //         .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
-    //         .getQuery();
-    //       return `postForStudio.id NOT IN (${subQuery})`;
-    //     });
-    // }, 'totalvideos');
     studioQuery.where((qb) => {
       const subQuery = qb
         .select('termRelationPost.termId')
         .from(PostEntity, 'postForStudio')
-        .distinct()
         .where('postForStudio.postType = :postType', { postType: 'post' })
         .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
         .innerJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
         .andWhere('trStudioPost.termId = term.id')
-        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+        .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
         .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
         .andWhere((qb) => {
           const subQuery = qb
@@ -97,7 +73,7 @@ export class StudiosService {
         //.where('COUNT(postForStudio.id) > :count', { count: 0 })
         .having('COUNT(postForStudio.id) > :count', { count: 0 })
         .groupBy('postForStudio.id')
-        .getQuery();
+        .getRawMany();
       console.log(subQuery);
       return `term.id NOT IN (${subQuery})`;
     });
