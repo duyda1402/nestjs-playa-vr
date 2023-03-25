@@ -79,7 +79,7 @@ export class StudiosService {
     //     .getQuery();
     //   return `term.id NOT IN (${subQuery})`;
     // });
-    const subQuery3 = this.termRepository
+    const subQuery3 = await this.termRepository
       .createQueryBuilder('termStudio')
       .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'termStudio.id = termRelationPost.termId')
       .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
@@ -96,12 +96,13 @@ export class StudiosService {
           .getQuery();
         return `postForStudio.id NOT IN (${subQuery})`;
       })
-      .select(['termStudio.id as tids'])
+      .select(['termStudio.id as tids', 'COUNT(postForStudio.id) as total'])
       .having('COUNT(postForStudio.id) = :count', { count: 0 })
       .groupBy('termStudio.id')
-      .getQueryAndParameters();
-
-    studioQuery.andWhere(`term.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
+      .getRawMany();
+    // .getQueryAndParameters();
+    console.log(subQuery3);
+    // studioQuery.andWhere(`term.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
