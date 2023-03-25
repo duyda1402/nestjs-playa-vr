@@ -65,9 +65,9 @@ export class StudiosService {
     studioQuery
       .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'term.id = termRelationPost.termId')
       .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
-      .where('postForStudio.postType = :postType', { postType: 'post' })
+      .andWhere('postForStudio.postType = :postType', { postType: 'post' })
       .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost251', 'postForStudio.id = termRelationPost251.objectId')
+      .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost251', 'postForStudio.id = termRelationPost251.objectId')
       .andWhere('termRelationPost251.termId = :termPostId', { termPostId: 251 })
       .andWhere((qb) => {
         const subQuery = qb
