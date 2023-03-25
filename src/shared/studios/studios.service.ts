@@ -45,20 +45,8 @@ export class StudiosService {
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
-      .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
-      .addSelect((subQuery) => {
-        return (
-          subQuery
-            .select('SUM(postForStudio.id)', 'total')
-            .from(PostEntity, 'postForStudio')
-            .where('postForStudio.postType = :postType', { postType: 'post' })
-            .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-            // .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-            // .andWhere('trStudioPost.termId = term.id')
-            .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-            .andWhere('trStudioPost.termId = :termPostId', { termPostId: 251 })
-        );
-      }, 'totalPost');
+      .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
+
     // .andWhere('totalPost > :totalYes', { totalYes: 0 });
 
     if (query.title) {
@@ -78,6 +66,19 @@ export class StudiosService {
     }
 
     const dataPromise = studioQuery
+      .addSelect((subQuery) => {
+        return (
+          subQuery
+            .select('SUM(postForStudio.id)', 'total')
+            .from(PostEntity, 'postForStudio')
+            .where('postForStudio.postType = :postType', { postType: 'post' })
+            .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+            // .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+            // .andWhere('trStudioPost.termId = term.id')
+            .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+            .andWhere('trStudioPost.termId = :termPostId', { termPostId: 251 })
+        );
+      }, 'totalPost')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
