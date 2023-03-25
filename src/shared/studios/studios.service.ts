@@ -93,7 +93,7 @@ export class StudiosService {
           return `postForStudio.id NOT IN (${subQuery})`;
         })
         .getQuery();
-      return `(${subQuery}).resultCount > 0`;
+      return `(${subQuery}) > 0`;
     });
 
     if (query.order === 'popularity') {
