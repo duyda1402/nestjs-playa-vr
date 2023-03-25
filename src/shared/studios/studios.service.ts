@@ -75,7 +75,7 @@ export class StudiosService {
       }, 'totalvideos')
       .groupBy('term.id')
       .addGroupBy('totalvideos')
-      .having('totalvideos > 0');
+      .andWhere('totalvideos > 0');
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
