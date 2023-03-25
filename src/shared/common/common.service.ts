@@ -202,12 +202,14 @@ export class CommonService {
 
       //Free 5K
       if (fieldsMap.free_embed_video_5k) {
-        videoData.five_k_stream = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_source = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_stream = videoData.five_k_source;
       }
 
       //Paid 5K
       if (fieldsMap.paid_embed_video_5k) {
-        videoData.five_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.paid_embed_video_5k);
+        videoData.five_k_paid_source = await this.getS3MetaInfoKey(fieldsMap.paid_embed_video_5k);
+        videoData.five_k_paid_stream = videoData.five_k_paid_source;
       }
 
       //Free Original
@@ -259,7 +261,7 @@ export class CommonService {
       { quality: 'SD', f: 'sd', stream: 1, download: 1, ord: 5, ul: 0 },
       { quality: 'HD', f: 'hd', stream: 1, download: 1, ord: 15, ul: 0 },
       { quality: '4K', f: 'four_k', stream: 1, download: 1, ord: 45, ul: 1 },
-      { quality: '5K', f: 'five_k', stream: 1, download: 0, ord: 55, ul: 2 },
+      { quality: '5K', f: 'five_k', stream: 1, download: 1, ord: 55, ul: 2 },
     ];
 
     const maxQuality = await this.getVideoMaxQuality(videoData.id);
