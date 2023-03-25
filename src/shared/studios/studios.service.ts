@@ -84,16 +84,14 @@ export class StudiosService {
           .where('tr.termId = term.id');
       }, 'popularity');
     }
-    // .groupBy('term.id')
 
     const dataPromise = studioQuery
-      .andWhere('totalvideos > 0')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    const countPromise = studioQuery.andWhere('totalvideos > 0').getCount();
+    const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
     console.log(data);
     let content = [];
