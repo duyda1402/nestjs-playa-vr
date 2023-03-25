@@ -73,9 +73,8 @@ export class StudiosService {
         //.where('COUNT(postForStudio.id) > :count', { count: 0 })
         .having('COUNT(postForStudio.id) > :count', { count: 0 })
         .groupBy('postForStudio.id')
-        .getRawMany();
-      console.log(subQuery);
-      return `term.id NOT IN (${subQuery})`;
+        .getQuery();
+      return `tt.termId NOT IN (${subQuery})`;
     });
 
     if (query.order === 'popularity') {
