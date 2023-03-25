@@ -47,17 +47,19 @@ export class StudiosService {
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' })
       .addSelect((subQuery) => {
-        return subQuery
-          .select('SUM(postForStudio.id)', 'total')
-          .from(PostEntity, 'postForStudio')
-          .innerJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-          .where('trStudioPost.termId = term.id')
-          .andWhere('postForStudio.postType = :postType', { postType: 'post' })
-          .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-          .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-          .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
-      }, 'totalpost');
-    // .andWhere('totalpost > :totalYes', { totalYes: 0 });
+        return (
+          subQuery
+            .select('SUM(postForStudio.id)', 'total')
+            .from(PostEntity, 'postForStudio')
+            .where('postForStudio.postType = :postType', { postType: 'post' })
+            .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+            // .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+            // .andWhere('trStudioPost.termId = term.id')
+            .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+            .andWhere('trStudioPost.termId = :termPostId', { termPostId: 251 })
+        );
+      }, 'totalPost');
+    // .andWhere('totalPost > :totalYes', { totalYes: 0 });
 
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
