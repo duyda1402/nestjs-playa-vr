@@ -65,7 +65,7 @@ export class StudiosService {
     studioQuery
       .addSelect((subQuery) => {
         return subQuery
-          .select('COUNT(postForStudio.id)', 'total')
+          .select('COUNT(postForStudio.id)', 'totalPost')
           .from(PostEntity, 'postForStudio')
           .where('postForStudio.postType = :postType', { postType: 'post' })
           .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
