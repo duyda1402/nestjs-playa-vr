@@ -79,7 +79,7 @@ export class StudiosService {
             .where(`termPostExist.termId IN(:...ids)`, { ids: [4244, 5685] })
             .select('termPostExist.objectId')
             .getQueryAndParameters();
-          return `post.id NOT IN (${subQuery})`;
+          return `postForStudio.id NOT IN (${subQuery})`;
         });
     }, 'total');
     // .having('total > 0');
