@@ -12,7 +12,6 @@ import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
 import { PostEntity } from 'src/entities/post.entity';
-import * as SqlString from 'sqlstring';
 
 @Injectable()
 export class StudiosService {
@@ -59,9 +58,7 @@ export class StudiosService {
       'term.id as tid',
       'COUNT(postForStudio.id) as total',
     ]);
-
-    // const subQuery3 = await this.termRepository
-    //   .createQueryBuilder('term')
+    // Lọc các studio có video
     studioQuery
       .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'term.id = termRelationPost.termId')
       .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
@@ -78,13 +75,7 @@ export class StudiosService {
           .getQuery();
         return `postForStudio.id NOT IN (${subQuery})`;
       })
-      // .select(['term.id as tids', 'term.slug as slug', 'COUNT(postForStudio.id) as total'])
-      // .having('COUNT(postForStudio.id) = :count', { count: 0 })
       .groupBy('term.id');
-    //   .getRawMany();
-    //  .getQueryAndParameters();
-    // cocnsole.log(subQuery3);
-    // studioQuery.andWhere(`term.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
@@ -104,7 +95,6 @@ export class StudiosService {
 
     const countPromise = studioQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-    console.log(data);
 
     let content = [];
     const imageIds = [],
