@@ -52,30 +52,28 @@ export class StudiosService {
     }
 
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
-    studioQuery
-      .addSelect((subQuery) => {
-        return subQuery
-          .select('COUNT(postForStudio.id)', 'totalvideos')
-          .from(PostEntity, 'postForStudio')
-          .where('postForStudio.postType = :postType', { postType: 'post' })
-          .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-          .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-          .andWhere('trStudioPost.termId = term.id')
-          .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-          .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-          .andWhere((qb) => {
-            const subQuery = qb
-              .subQuery()
-              .select('termPostExist.objectId')
-              .from(TermRelationShipsBasicEntity, 'termPostExist')
-              .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
-              .getQuery();
-            return `postForStudio.id NOT IN (${subQuery})`;
-          })
-          .addGroupBy('term.id');
-      }, 'totalvideos')
-      .addSelect('totalvideos', 'totalvideos_tmp') // Đặt tên trường tạm thời là 'totalvideos_tmp'
-      .having('totalvideos_tmp > :count', { count: 0 });
+    studioQuery.addSelect((subQuery) => {
+      return subQuery
+        .select('COUNT(postForStudio.id)', 'totalvideos')
+        .from(PostEntity, 'postForStudio')
+        .where('postForStudio.postType = :postType', { postType: 'post' })
+        .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+        .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+        .andWhere('trStudioPost.termId = term.id')
+        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('termPostExist.objectId')
+            .from(TermRelationShipsBasicEntity, 'termPostExist')
+            .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
+            .getQuery();
+          return `postForStudio.id NOT IN (${subQuery})`;
+        })
+        .addGroupBy('term.id');
+    }, 'totalvideos');
+
     // .groupBy('term.id');
 
     if (query.order === 'popularity') {
@@ -89,6 +87,8 @@ export class StudiosService {
     }
 
     const dataPromise = studioQuery
+      .addSelect('totalvideos', 'totalvideos_tmp')
+      .having('totalvideos_tmp > :count', { count: 0 })
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
