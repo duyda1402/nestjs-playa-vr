@@ -94,7 +94,8 @@ export class StudiosService {
         });
       // .getQuery();
       console.log(subQuery);
-      return `(${subQuery})`;
+      // return `(${subQuery})`;
+      return 'true';
     });
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
