@@ -71,16 +71,16 @@ export class StudiosService {
         .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
         .andWhere('trStudioPost.termId = term.id')
         .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 })
-        .andWhere((qb) => {
-          const subQuery = qb
-            .subQuery()
-            .from(TermRelationShipsBasicEntity, 'termPostExist')
-            .where(`termPostExist.termId IN(:...ids)`, { ids: [4244, 5685] })
-            .select('termPostExist.objectId')
-            .getQueryAndParameters();
-          return `postForStudio.id NOT IN (${subQuery})`;
-        });
+        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
+      // .andWhere((qb) => {
+      //   const subQuery = qb
+      //     .subQuery()
+      //     .from(TermRelationShipsBasicEntity, 'termPostExist')
+      //     .where(`termPostExist.termId IN(:...ids)`, { ids: [4244, 5685] })
+      //     .select('termPostExist.objectId')
+      //     .getQueryAndParameters();
+      //   return `postForStudio.id NOT IN (${subQuery})`;
+      // });
     }, 'total');
     // .having('total > 0');
     // .groupBy('term.id')
