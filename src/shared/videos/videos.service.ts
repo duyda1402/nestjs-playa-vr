@@ -153,7 +153,6 @@ export class VideoService {
         .where(`tr.termId IN(:...ids)`, { ids: Object.keys(etIds) })
         .select(['tr.objectId as pid'])
         .getQueryAndParameters();
-
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery4[0], subQuery4[1])})`);
     }
 
@@ -164,7 +163,6 @@ export class VideoService {
       'post.postTitle as postTitle',
       'IFNULL(pp.ppdate, post.postDate) as `release_date`',
     ]);
-    // .addSelect(this.queryReplace, 'nametranform');
 
     if (order === 'title') {
       queryVideo.orderBy('CAST(post.postName AS UNSIGNED)', 'ASC');
