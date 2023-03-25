@@ -27,7 +27,7 @@ export class AuthService {
     }
     // Tạo token và trả về cho controller
     const userRole = await this.userService.getUserRole(user.id);
-    const payload = { username: user.userLogin, sub: user.id, role: userRole};
+    const payload = { username: user.userLogin, sub: user.id, role: userRole };
     const token = await this.generateToken(payload);
     return { status: { code: 1, message: 'Login successful' }, data: token };
   }

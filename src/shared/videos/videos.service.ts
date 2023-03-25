@@ -67,7 +67,7 @@ export class VideoService {
         content: cachedVideos.data.content,
       };
     }
-    let etIds = {4244: "trans", 5685: "gay"}// 4244 = trans, 5685 = gay
+    const etIds = { 4244: 'trans', 5685: 'gay' }; // 4244 = trans, 5685 = gay
 
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
@@ -76,8 +76,8 @@ export class VideoService {
       .leftJoin(PopularScoresEntity, 'pp', 'pp.postId = post.id')
       //=================  lọc điều kiện video
       .where('post.postType = "post" AND post.postStatus = "publish"')
-      .andWhere('tr.termId = :termRelationId', { termRelationId: 251 })//VR Videos condition
-      .andWhere('tr2.termId = :termRelationId', { termRelationId: 5210 });//Premium condition
+      .andWhere('tr.termId = :termRelationId', { termRelationId: 251 }) //VR Videos condition
+      .andWhere('tr2.termId = :termRelationId', { termRelationId: 5210 }); //Premium condition
 
     if (paramTitle) {
       queryVideo.andWhere('post.postTitle LIKE :videoName', { videoName: `%${paramTitle}%` });
@@ -112,11 +112,11 @@ export class VideoService {
     }
 
     if (Array.isArray(query.includedCategories) && query.includedCategories.length) {
-      if(query.includedCategories.indexOf('trans') !== -1) {
+      if (query.includedCategories.indexOf('trans') !== -1) {
         delete etIds[4244];
       }
 
-      if(query.includedCategories.indexOf('gay') !== -1) {
+      if (query.includedCategories.indexOf('gay') !== -1) {
         delete etIds[5685];
       }
 
@@ -147,26 +147,26 @@ export class VideoService {
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
 
-    if(Object.keys(etIds).length) {
-        const subQuery4 = this.termRelationshipRepo.createQueryBuilder('tr')
-            .where(`tr.termId IN(:...ids)`, { ids: Object.keys(etIds) })
-            .select(['tr.objectId as pid'])
-            .getQueryAndParameters();
+    if (Object.keys(etIds).length) {
+      const subQuery4 = this.termRelationshipRepo
+        .createQueryBuilder('tr')
+        .where(`tr.termId IN(:...ids)`, { ids: Object.keys(etIds) })
+        .select(['tr.objectId as pid'])
+        .getQueryAndParameters();
 
-        queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery4[0], subQuery4[1])})`);
+      queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery4[0], subQuery4[1])})`);
     }
 
-    queryVideo
-      .select([
-        'post.id as id',
-        'post.postName as postName',
-        'termStudio.name as subtitle',
-        'post.postTitle as postTitle',
-        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-      ]);
-      // .addSelect(this.queryReplace, 'nametranform');
+    queryVideo.select([
+      'post.id as id',
+      'post.postName as postName',
+      'termStudio.name as subtitle',
+      'post.postTitle as postTitle',
+      'IFNULL(pp.ppdate, post.postDate) as `release_date`',
+    ]);
+    // .addSelect(this.queryReplace, 'nametranform');
 
-    if(order === 'title') {
+    if (order === 'title') {
       queryVideo.orderBy('CAST(post.postName AS UNSIGNED)', 'ASC');
       queryVideo.addOrderBy('post.postName', direction);
     } else {

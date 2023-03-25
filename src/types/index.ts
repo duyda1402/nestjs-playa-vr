@@ -11,7 +11,7 @@ export type QueryBody = {
 };
 
 export type LoggingData = {
-  event_type: "videoDownloaded" | "videoStreamEnd";
+  event_type: 'videoDownloaded' | 'videoStreamEnd';
   video_id: number;
   video_quality: string;
   duration: number;

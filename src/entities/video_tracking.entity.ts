@@ -1,12 +1,12 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import {DateMathTime} from "@opensearch-project/opensearch/api/types";
+import { DateMathTime } from '@opensearch-project/opensearch/api/types';
 
 @Entity({ name: 'video_tracking' })
 export class VideoTrackingEntity {
   @PrimaryGeneratedColumn({ name: 'id' })
   id: number;
 
-  @Column({name: 'user_id'})
+  @Column({ name: 'user_id' })
   userId: number;
 
   @Column({ name: 'user_ip' })
@@ -48,7 +48,7 @@ export class VideoTrackingEntity {
   @Column()
   nfaction: number;
 
-  @Column({type: 'datetime'})
+  @Column({ type: 'datetime' })
   created: string;
 
   @Column({ name: 'studio_id' })
@@ -56,5 +56,4 @@ export class VideoTrackingEntity {
 
   @Column({ name: 'user_agent' })
   userAgent: string;
-
 }

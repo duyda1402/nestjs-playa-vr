@@ -6,7 +6,7 @@ import { IFUserProfile } from 'src/types';
 import { UserMetaEntity } from 'src/entities/user_meta.entity';
 import { SubscriptionEntity } from 'src/entities/subscriptions.entity';
 import { JwtService } from '@nestjs/jwt';
-import {unserialize} from "php-serialize";
+import { unserialize } from 'php-serialize';
 
 @Injectable()
 export class UserService {
@@ -68,28 +68,28 @@ export class UserService {
     let userRole = 'free';
 
     const sub = await this.subRepository
-        .createQueryBuilder('sub')
-        .where('sub.userId = :userId', { userId: userId })
-        .andWhere('sub.studioId = :studioId', { studioId: 5210 })
-        .andWhere('(end_datetime >= NOW() OR end_datetime IS NULL)')
-        .select(['sub.userId as id'])
-        .getRawOne();
+      .createQueryBuilder('sub')
+      .where('sub.userId = :userId', { userId: userId })
+      .andWhere('sub.studioId = :studioId', { studioId: 5210 })
+      .andWhere('(end_datetime >= NOW() OR end_datetime IS NULL)')
+      .select(['sub.userId as id'])
+      .getRawOne();
 
-    if(sub && sub.id) {
+    if (sub && sub.id) {
       userRole = 'premium';
     } else {
       const metaRow = await this.userRepository
-          .createQueryBuilder('user')
-          .where('user.id = :userId', { userId: userId })
-          .leftJoinAndSelect(UserMetaEntity, 'um', 'um.userId = user.id')
-          .andWhere('um.metaKey = :metaKey', { metaKey: 'wp_rkr3j35p5r_capabilities' })
-          .select(['um.metaValue as `value`'])
-          .getRawOne();
+        .createQueryBuilder('user')
+        .where('user.id = :userId', { userId: userId })
+        .leftJoinAndSelect(UserMetaEntity, 'um', 'um.userId = user.id')
+        .andWhere('um.metaKey = :metaKey', { metaKey: 'wp_rkr3j35p5r_capabilities' })
+        .select(['um.metaValue as `value`'])
+        .getRawOne();
 
-      if(metaRow && metaRow.value) {
+      if (metaRow && metaRow.value) {
         const caps = unserialize(metaRow.value);
 
-        if(caps && Object.keys(caps).indexOf('premium-give-away') !== -1) {
+        if (caps && Object.keys(caps).indexOf('premium-give-away') !== -1) {
           userRole = 'premium';
         }
       }
