@@ -73,7 +73,7 @@ export class StudiosService {
             return `postForStudio.id NOT IN (${subQuery})`;
           });
       }, 'totalvideos')
-      .groupBy('totalvideos');
+      .groupBy('term.id');
     // .having('totalvideos > 0');
 
     if (query.order === 'popularity') {
