@@ -27,6 +27,8 @@ export class VideoService {
     private readonly postMetaRepository: Repository<PostMetaEntity>,
     @InjectRepository(TermEntity)
     private readonly termRepository: Repository<TermEntity>,
+    @InjectRepository(TermRelationShipsBasicEntity)
+    private readonly termRelationshipRepo: Repository<TermRelationShipsBasicEntity>,
     private readonly opensearchService: OpenSearchService,
     private readonly commonService: CommonService,
     private readonly userService: UserService
@@ -46,13 +48,13 @@ export class VideoService {
     const paramActor = query.actor ? query.actor : null;
     const paramStudio = query.studio ? query.studio : null;
     const paramTitle = query.title ? query.title : null;
-    const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
+    const direction = (query.direction || '').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     const order =
       query.order === 'popularity'
         ? 'pp.premiumPopularScore'
         : query.order === 'release_date'
         ? 'release_date'
-        : 'nametranform';
+        : 'title';
     // Cache here: cache_key = `video_list_data:${md5(queryObject)}`, cache_data = {content}
     const keyCache = generateKeyCache('video_list_data', query);
     const cachedVideos = this.cache.get(keyCache);
@@ -141,12 +143,18 @@ export class VideoService {
         'termStudio.name as subtitle',
         'post.postTitle as postTitle',
         'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-      ])
-      .addSelect(this.queryReplace, 'nametranform');
+      ]);
+      // .addSelect(this.queryReplace, 'nametranform');
+
+    if(order === 'title') {
+      queryVideo.orderBy('CAST(post.postName AS UNSIGNED)', 'ASC');
+      queryVideo.addOrderBy('post.postName', direction);
+    } else {
+      queryVideo.orderBy(order, direction);
+    }
 
     const dataPromis = queryVideo
       .limit(query.perPage)
-      .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 

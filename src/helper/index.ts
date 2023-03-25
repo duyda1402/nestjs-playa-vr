@@ -10,9 +10,11 @@ export function convertTimeToSeconds(timeString: string) {
 }
 
 export function isProduction(): boolean {
-  return false; //For test
+  return process.env.NODE_ENV === 'production' || process.env.DB_DATABASE === 'vrporn_live';
+}
 
-  return process.env.NODE_ENV === 'production';
+export function getCurrentTimestamp(): number {
+  return Math.round(Date.now() / 1000);
 }
 
 export function arrayPluck(arr: any[], field: string): any[] {
