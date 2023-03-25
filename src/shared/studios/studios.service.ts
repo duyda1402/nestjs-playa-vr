@@ -56,8 +56,8 @@ export class StudiosService {
           .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
           .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
           .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
-      }, 'totalPost')
-      .andWhere('totalPost > :totalYes', { totalYes: 0 });
+      }, 'totalpost');
+    // .andWhere('totalpost > :totalYes', { totalYes: 0 });
 
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
