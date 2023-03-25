@@ -73,9 +73,7 @@ export class StudiosService {
             return `postForStudio.id NOT IN (${subQuery})`;
           });
       }, 'totalvideos')
-      .groupBy('term.id')
-      .addGroupBy('totalvideos')
-      .andWhere('totalvideos > 0');
+      .groupBy('term.id');
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
@@ -89,13 +87,13 @@ export class StudiosService {
     // .groupBy('term.id')
 
     const dataPromise = studioQuery
-
+      .andWhere('totalvideos > 0')
       .limit(query.perPage)
       .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
-    const countPromise = studioQuery.getCount();
+    const countPromise = studioQuery.andWhere('totalvideos > 0').getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
     console.log(data);
     let content = [];
