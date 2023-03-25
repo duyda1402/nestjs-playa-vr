@@ -91,12 +91,13 @@ export class StudiosService {
             .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
             .getQuery();
           return `postForStudio.id NOT IN (${subQuery})`;
-        });
-      // .getQuery();
+        })
+        .getQuery();
       console.log(subQuery);
       // return `(${subQuery})`;
       return 'true';
     });
+
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
         return subQuery
