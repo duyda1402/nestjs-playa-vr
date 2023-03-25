@@ -62,17 +62,20 @@ export class StudiosService {
           .where('tr.termId = term.id');
       }, 'popularity');
     }
-    studioQuery.addSelect((subQuery) => {
-      return subQuery
-        .select('COUNT(postForStudio.id)', 'total')
-        .from(PostEntity, 'postForStudio')
-        .where('postForStudio.postType = :postType', { postType: 'post' })
-        .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
-        .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
-        .andWhere('trStudioPost.termId = term.id')
-        .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
-        .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
-    }, 'totalPost');
+    studioQuery
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(postForStudio.id)', 'total')
+          .from(PostEntity, 'postForStudio')
+          .where('postForStudio.postType = :postType', { postType: 'post' })
+          .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+          .leftJoin(TermRelationShipsBasicEntity, 'trStudioPost', 'trStudioPost.objectId = postForStudio.id')
+          .andWhere('trStudioPost.termId = term.id')
+          .leftJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'postForStudio.id = termRelationPost.objectId')
+          .andWhere('termRelationPost.termId = :termPostId', { termPostId: 251 });
+      }, 'totalPost')
+      .groupBy('term.id')
+      .having('totalPosts > 0');
     // .andWhere('totalPost > 0');
     const dataPromise = studioQuery
       .limit(query.perPage)
