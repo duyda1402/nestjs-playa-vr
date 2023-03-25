@@ -52,7 +52,7 @@ export class StudiosService {
     }
 
     studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
-
+    studioQuery.groupBy('id').addGroupBy('name').addGroupBy('image');
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {
         return subQuery
