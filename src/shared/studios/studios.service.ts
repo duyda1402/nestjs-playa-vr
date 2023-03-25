@@ -97,7 +97,7 @@ export class StudiosService {
         return `postForStudio.id NOT IN (${subQuery})`;
       })
       .select(['termStudio.id as tids', 'COUNT(postForStudio.id) as total'])
-      .having('COUNT(postForStudio.id) = :count', { count: 0 })
+      // .having('COUNT(postForStudio.id) = :count', { count: 0 })
       .groupBy('termStudio.id')
       .getRawMany();
     // .getQueryAndParameters();
