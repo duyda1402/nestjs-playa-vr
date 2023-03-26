@@ -67,7 +67,8 @@ export class VideoService {
         content: cachedVideos.data.content,
       };
     }
-    const etIds = { 4244: 'trans', 5685: 'gay' }; // 4244 = trans, 5685 = gay
+
+    let etIds: any = { 4244: 'trans', 5685: 'gay' }; // 4244 = trans, 5685 = gay
 
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
@@ -91,6 +92,7 @@ export class VideoService {
 
     //======== Lọc theo studio
     if (paramStudio) {
+      etIds = {};//We should show all post have ET tag in studio page
       queryVideo.andWhere('termStudio.slug = :studioId', { studioId: paramStudio });
     }
     //==== Lọc theo actor

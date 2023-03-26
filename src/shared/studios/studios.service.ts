@@ -72,15 +72,6 @@ export class StudiosService {
       )
       .andWhere('termRelationPostVR.termId = :termPostId', { termPostId: 251 })
       .andWhere('termRelationPostPremium.termId = :termPostPremiumId', { termPostPremiumId: 5210 })
-      .andWhere((qb) => {
-        const subQuery = qb
-          .subQuery()
-          .select('termPostExist.objectId')
-          .from(TermRelationShipsBasicEntity, 'termPostExist')
-          .where(`termPostExist.termId IN (:...termIds)`, { termIds: [4244, 5685] })
-          .getQuery();
-        return `postForStudio.id NOT IN (${subQuery})`;
-      })
       .groupBy('term.id');
 
     if (query.order === 'popularity') {
