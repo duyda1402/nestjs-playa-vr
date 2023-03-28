@@ -272,11 +272,11 @@ export class CommonService {
         f: 'original',
         stream: 0,
         download: 1,
-        ord: maxQuality * 10 + 6,
+        ord: maxQuality * 10 + (maxQuality === 5 ? 6 : 5),
         ul: 2,
       });
     }
-    console.log(types);
+
     const formatParts = videoData.hd_file_format.split('_');
     const projection = formatParts[1];
     const stereo = formatParts[2];
