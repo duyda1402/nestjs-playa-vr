@@ -267,7 +267,14 @@ export class CommonService {
     const maxQuality = await this.getVideoMaxQuality(videoData.id);
 
     if (maxQuality && maxQuality > 4) {
-      types.push({ quality: `${maxQuality}K`, f: 'original', stream: 0, download: 1, ord: maxQuality * 10 + 5, ul: 2 });
+      types.push({
+        quality: `Max Quality ${maxQuality}K`,
+        f: 'original',
+        stream: 0,
+        download: 1,
+        ord: maxQuality * 10 + 6,
+        ul: 2,
+      });
     }
 
     const formatParts = videoData.hd_file_format.split('_');

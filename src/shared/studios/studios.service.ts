@@ -21,8 +21,6 @@ export class StudiosService {
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
-    @InjectRepository(PostEntity)
-    private readonly postRepository: Repository<PostEntity>,
     private readonly openSearchService: OpenSearchService,
     private readonly commonService: CommonService
   ) {}
