@@ -383,24 +383,24 @@ export class VideoService {
       ? this.commonService.getImagesUrl([metaMap.image_id, metaMap.trailer_atlas, metaMap.full_atlas])
       : promiseEmpty({});
     //Load attachment meta data;
-    const attachementDataPromise = this.postMetaRepository
+    const attachmentDataPromise = this.postMetaRepository
       .createQueryBuilder('pm')
       .where('pm.metaKey = "_wp_attachment_metadata"')
       .andWhere('pm.postId IN(:...ids)', { ids: [metaMap.trailer_id, metaMap.full_id] })
       .select(['pm.postId as id', 'pm.metaValue as value'])
       .getRawMany();
 
-    const [studio, categories, actors, views, imagesMap, attachementDataRows] = await Promise.all([
+    const [studio, categories, actors, views, imagesMap, attachmentDataRows] = await Promise.all([
       studioPromise,
       categoriesPromise,
       actorsPromise,
       viewsPromise,
       imagesPromise,
-      attachementDataPromise,
+      attachmentDataPromise,
     ]);
 
     const attachmentDataMap = {};
-    attachementDataRows.forEach((v) => {
+    attachmentDataRows.forEach((v) => {
       attachmentDataMap[v.id] = v.value;
     });
     this.cache.set(keyCache, {

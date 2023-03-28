@@ -276,7 +276,7 @@ export class CommonService {
         ul: 2,
       });
     }
-
+    console.log(types);
     const formatParts = videoData.hd_file_format.split('_');
     const projection = formatParts[1];
     const stereo = formatParts[2];
