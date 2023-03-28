@@ -8,7 +8,7 @@ export class AvgStreamTimesEntity {
   @Column()
   studio: string;
 
-  @Column({ name: 'stream_date', type: "date" })
+  @Column({ name: 'stream_date', type: 'date' })
   streamDate: Date;
 
   @Column({ name: 'prem_download_value' })

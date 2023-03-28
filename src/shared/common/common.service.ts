@@ -16,7 +16,7 @@ import { PostEntity } from './../../entities/post.entity';
 import { IFVideoLink } from './../../types/data.type';
 import { TermRelationShipsBasicEntity } from '../../entities/term_relationships_basic.entity';
 import { TermEntity } from '../../entities/term.entity';
-import {TermTaxonomyEntity} from "../../entities/term_taxonomy.entity";
+import { TermTaxonomyEntity } from '../../entities/term_taxonomy.entity';
 
 @Injectable()
 export class CommonService {
@@ -202,12 +202,14 @@ export class CommonService {
 
       //Free 5K
       if (fieldsMap.free_embed_video_5k) {
-        videoData.five_k_stream = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_source = await this.getS3MetaInfoKey(fieldsMap.free_embed_video_5k);
+        videoData.five_k_stream = videoData.five_k_source;
       }
 
       //Paid 5K
       if (fieldsMap.paid_embed_video_5k) {
-        videoData.five_k_paid_stream = await this.getS3MetaInfoKey(fieldsMap.paid_embed_video_5k);
+        videoData.five_k_paid_source = await this.getS3MetaInfoKey(fieldsMap.paid_embed_video_5k);
+        videoData.five_k_paid_stream = videoData.five_k_paid_source;
       }
 
       //Free Original
@@ -259,7 +261,7 @@ export class CommonService {
       { quality: 'SD', f: 'sd', stream: 1, download: 1, ord: 5, ul: 0 },
       { quality: 'HD', f: 'hd', stream: 1, download: 1, ord: 15, ul: 0 },
       { quality: '4K', f: 'four_k', stream: 1, download: 1, ord: 45, ul: 1 },
-      { quality: '5K', f: 'five_k', stream: 1, download: 0, ord: 55, ul: 2 },
+      { quality: '5K', f: 'five_k', stream: 1, download: 1, ord: 55, ul: 2 },
     ];
 
     const maxQuality = await this.getVideoMaxQuality(videoData.id);
@@ -328,7 +330,10 @@ export class CommonService {
           const downloadItem = {
             is_stream: false,
             is_download: true,
-            url: userLevel < v.ul || type === 'full' ? null : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
+            url:
+              userLevel < v.ul || type === 'full'
+                ? null
+                : this.downloadLink(videoData[`${v.f}${fieldMiddle}_source`] || null),
             unavailable_reason: reason,
             projection: projection,
             stereo: stereo,
@@ -336,7 +341,7 @@ export class CommonService {
             quality_order: v.ord,
           };
 
-          if(userLevel === 0) {
+          if (userLevel === 0) {
             downloadItem.url = null;
             downloadItem.unavailable_reason = 'login';
           }
@@ -441,11 +446,12 @@ export class CommonService {
   }
 
   async hasPremiumContent(videoId: number): Promise<boolean> {
-    const rlRow = await this.termRelationRepository.createQueryBuilder('tr')
-        .where('tr.objectId = :videoId', {videoId: videoId})
-        .andWhere('tr.termId = 5210')
-        .select(['tr.objectId as pid'])
-        .getRawOne();
+    const rlRow = await this.termRelationRepository
+      .createQueryBuilder('tr')
+      .where('tr.objectId = :videoId', { videoId: videoId })
+      .andWhere('tr.termId = 5210')
+      .select(['tr.objectId as pid'])
+      .getRawOne();
 
     return rlRow && rlRow.pid;
   }
@@ -453,18 +459,19 @@ export class CommonService {
   async getTheTerm(postId: number, taxonomy: string): Promise<TermEntity | null> {
     const terms = await this.getTheTerms(postId, taxonomy);
 
-    if(terms && terms.length) return terms[0];
+    if (terms && terms.length) return terms[0];
 
     return null;
   }
 
   async getTheTerms(postId: number, taxonomy: string): Promise<TermEntity[] | null> {
-    return await this.termRepository.createQueryBuilder('t')
-        .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
-        .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id')
-        .where('tr.objectId = :postId', {postId: postId})
-        .andWhere('tt.taxonomy = :taxonomy', {taxonomy: taxonomy})
-        .getMany();
+    return await this.termRepository
+      .createQueryBuilder('t')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.termId = t.id')
+      .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = t.id')
+      .where('tr.objectId = :postId', { postId: postId })
+      .andWhere('tt.taxonomy = :taxonomy', { taxonomy: taxonomy })
+      .getMany();
   }
 
   async getS3MetaInfoKey(postId: number): Promise<string> {

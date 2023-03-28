@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
 import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { PostEntity } from 'src/entities/post.entity';
 
 @Injectable()
 export class StudiosService {
@@ -20,6 +21,8 @@ export class StudiosService {
     private readonly termRepository: Repository<TermEntity>,
     @InjectRepository(TermMetaEntity)
     private readonly termMetaRepository: Repository<TermMetaEntity>,
+    @InjectRepository(PostEntity)
+    private readonly postRepository: Repository<PostEntity>,
     private readonly openSearchService: OpenSearchService,
     private readonly commonService: CommonService
   ) {}
@@ -45,12 +48,31 @@ export class StudiosService {
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
       .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'logo_single_post' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'studio' });
-
     if (query.title) {
       studioQuery.andWhere('term.name LIKE :title', { title: `%${query.title}%` });
     }
-
-    studioQuery.select(['term.slug as id', 'term.name as name', 'tm.metaValue as image']);
+    studioQuery.select([
+      'term.slug as id',
+      'term.name as name',
+      'tm.metaValue as image',
+      'term.id as tid',
+      'COUNT(postForStudio.id) as total',
+    ]);
+    // Lọc các studio có video
+    studioQuery
+      .innerJoin(TermRelationShipsBasicEntity, 'termRelationPost', 'term.id = termRelationPost.termId')
+      .leftJoin(PostEntity, 'postForStudio', 'postForStudio.id = termRelationPost.objectId')
+      .andWhere('postForStudio.postType = :postType', { postType: 'post' })
+      .andWhere('postForStudio.postStatus = :postStatus', { postStatus: 'publish' })
+      .leftJoin(TermRelationShipsBasicEntity, 'termRelationPostVR', 'postForStudio.id = termRelationPostVR.objectId')
+      .leftJoin(
+        TermRelationShipsBasicEntity,
+        'termRelationPostPremium',
+        'postForStudio.id = termRelationPostPremium.objectId'
+      )
+      .andWhere('termRelationPostVR.termId = :termPostId', { termPostId: 251 })
+      .andWhere('termRelationPostPremium.termId = :termPostPremiumId', { termPostPremiumId: 5210 })
+      .groupBy('term.id');
 
     if (query.order === 'popularity') {
       studioQuery.addSelect((subQuery) => {

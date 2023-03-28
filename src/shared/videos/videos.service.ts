@@ -1,4 +1,4 @@
-import { Injectable, Query } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostMetaEntity } from 'src/entities/post_meta.entity';
@@ -69,13 +69,17 @@ export class VideoService {
       };
     }
 
+    let etIds: any = { 4244: 'trans', 5685: 'gay' }; // 4244 = trans, 5685 = gay
+
     const queryVideo = this.postRepository
       .createQueryBuilder('post')
       .innerJoin(TermRelationShipsBasicEntity, 'tr', 'post.id = tr.objectId')
+      .innerJoin(TermRelationShipsBasicEntity, 'tr2', 'post.id = tr2.objectId')
       .leftJoin(PopularScoresEntity, 'pp', 'pp.postId = post.id')
       //=================  lọc điều kiện video
       .where('post.postType = "post" AND post.postStatus = "publish"')
-      .andWhere('tr.termId = :termRelationId', { termRelationId: 251 });
+      .andWhere('tr.termId = :termRelationId', { termRelationId: 251 }) //VR Videos condition
+      .andWhere('tr2.termId = :termPremiumRelationId', { termPremiumRelationId: 5210 }); //Premium condition
 
     if (paramTitle) {
       queryVideo.andWhere('post.postTitle LIKE :videoName', { videoName: `%${paramTitle}%` });
@@ -89,6 +93,7 @@ export class VideoService {
 
     //======== Lọc theo studio
     if (paramStudio) {
+      etIds = {};//We should show all post have ET tag in studio page
       queryVideo.andWhere('termStudio.slug = :studioId', { studioId: paramStudio });
     }
     //==== Lọc theo actor
@@ -110,6 +115,14 @@ export class VideoService {
     }
 
     if (Array.isArray(query.includedCategories) && query.includedCategories.length) {
+      if (query.includedCategories.indexOf('trans') !== -1) {
+        delete etIds[4244];
+      }
+
+      if (query.includedCategories.indexOf('gay') !== -1) {
+        delete etIds[5685];
+      }
+
       query.includedCategories.forEach((term, index) => {
         term.trim() &&
           queryVideo
@@ -137,17 +150,24 @@ export class VideoService {
       queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery3[0], subQuery3[1])})`);
     }
 
-    queryVideo
-      .select([
-        'post.id as id',
-        'post.postName as postName',
-        'termStudio.name as subtitle',
-        'post.postTitle as postTitle',
-        'IFNULL(pp.ppdate, post.postDate) as `release_date`',
-      ]);
-      // .addSelect(this.queryReplace, 'nametranform');
+    if (Object.keys(etIds).length) {
+      const subQuery4 = this.termRelationshipRepo
+        .createQueryBuilder('tr')
+        .where(`tr.termId IN(:...ids)`, { ids: Object.keys(etIds) })
+        .select(['tr.objectId as pid'])
+        .getQueryAndParameters();
+      queryVideo.andWhere(`post.id NOT IN(${SqlString.format(subQuery4[0], subQuery4[1])})`);
+    }
 
-    if(order === 'title') {
+    queryVideo.select([
+      'post.id as id',
+      'post.postName as postName',
+      'termStudio.name as subtitle',
+      'post.postTitle as postTitle',
+      'IFNULL(pp.ppdate, post.postDate) as `release_date`',
+    ]);
+
+    if (order === 'title') {
       queryVideo.orderBy('CAST(post.postName AS UNSIGNED)', 'ASC');
       queryVideo.addOrderBy('post.postName', direction);
     } else {
