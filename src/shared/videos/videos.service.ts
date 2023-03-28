@@ -269,7 +269,7 @@ export class VideoService {
         id: cachedVideo.data.result?.id.toString(),
         title: cachedVideo.data.result?.postTitle.toString(),
         subtitle: cachedVideo.data.studio?.title,
-        description: striptags(cachedVideo.data.result?.postContent.toString()),
+        description: cachedVideo.data.result?.postContent ? striptags(cachedVideo.data.result?.postContent.toString()) : "",
         preview_image: cachedVideo.data.metaMap?.image_id
           ? cachedVideo.data.imagesMap[cachedVideo.data.metaMap.image_id] || null
           : null,
@@ -409,7 +409,7 @@ export class VideoService {
       id: result?.id.toString(),
       title: result?.postTitle.toString(),
       subtitle: studio?.title,
-      description: striptags(result?.postContent.toString()),
+      description: result.postContent ? striptags(result.postContent.toString()) : "",
       preview_image: metaMap.image_id ? imagesMap[metaMap.image_id] || null : null,
       views: views,
       release_date: result.release_date ? Math.round(new Date(result.release_date).getTime() / 1000) : 0,
