@@ -9,6 +9,8 @@ export function convertTimeToSeconds(timeString: string) {
   return minutes * 60 + seconds;
 }
 
+export const CACHE_TTL = 3 * 60 * 60 * 1000;
+
 export function isProduction(): boolean {
   return process.env.NODE_ENV === 'production' || process.env.DB_DATABASE === 'vrporn_live';
 }

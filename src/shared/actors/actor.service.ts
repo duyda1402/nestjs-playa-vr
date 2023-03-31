@@ -11,8 +11,9 @@ import { TermRelationShipsBasicEntity } from 'src/entities/term_relationships_ba
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
-import { converProperties, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { converProperties, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache, CACHE_TTL } from '../../helper';
 import { PostEntity } from 'src/entities/post.entity';
+import {TopPornstarsEntity} from "../../entities/top_pornstar.entity";
 
 @Injectable()
 export class ActorService {
@@ -57,6 +58,8 @@ export class ActorService {
     actorQuery.select(['term.slug as slug', 'term.name as name', 'tm.metaValue as image_id']);
 
     if (query.order === 'popularity') {
+      actorQuery.leftJoin(TopPornstarsEntity, 'top', 'top.termId = term.id');
+
       actorQuery.addSelect((subQuery) => {
         return subQuery
           .select('SUM(pp.premiumPopularScore)', 'result')
@@ -64,11 +67,15 @@ export class ActorService {
           .innerJoin(TermRelationShipsBasicEntity, 'tr', 'tr.objectId = pp.postId')
           .where('tr.termId = term.id');
       }, 'popularity');
+
+      actorQuery.orderBy('top.score', direction);
+      actorQuery.addOrderBy(order, direction);
+    } else {
+      actorQuery.orderBy(order, direction);
     }
 
     const dataPromise = actorQuery
       .limit(query.perPage)
-      .orderBy(order, direction)
       .offset(query.page * query.perPage)
       .getRawMany();
 
@@ -90,7 +97,7 @@ export class ActorService {
       preview: item.image_id ? imageMap[item.image_id] || null : null,
     }));
 
-    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + CACHE_TTL });
 
     return {
       page_index: query.page,
@@ -204,7 +211,7 @@ export class ActorService {
       views: views,
       banner: imageIdMap.profile_image ? imageMap[imageIdMap.top_banner_background] || null : null,
     };
-    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + CACHE_TTL });
     return responseData;
   }
 

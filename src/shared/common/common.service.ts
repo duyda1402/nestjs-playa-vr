@@ -8,6 +8,7 @@ import {
   getDownloadId,
   signCdnUrl,
   validatedKeyCache,
+  CACHE_TTL
 } from '../../helper';
 import { unserialize } from 'php-serialize';
 import { As3cfItemsEntity } from './../../entities/as3cf_items.entity';
@@ -245,7 +246,7 @@ export class CommonService {
         }
       }
     }
-    this.cache.set(keyCache, { data: { videoData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { videoData }, expiresAt: Date.now() + CACHE_TTL });
     return videoData;
   }
 

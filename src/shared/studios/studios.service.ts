@@ -10,7 +10,7 @@ import { IFStudioListView, IFStudioView, IFPage, QueryBody } from 'src/types';
 import { Repository } from 'typeorm';
 import { OpenSearchService } from './../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
-import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from '../../helper';
+import { generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache, CACHE_TTL } from '../../helper';
 import { PostEntity } from 'src/entities/post.entity';
 
 @Injectable()
@@ -125,7 +125,7 @@ export class StudiosService {
         };
       });
     }
-    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + CACHE_TTL });
     return {
       page_index: query.page,
       page_size: query.perPage,
@@ -186,7 +186,7 @@ export class StudiosService {
       description: metaData?.value || null,
       views: views,
     };
-    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { responseData }, expiresAt: Date.now() + CACHE_TTL });
     return responseData;
   }
 }

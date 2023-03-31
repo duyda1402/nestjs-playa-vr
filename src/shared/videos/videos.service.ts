@@ -10,7 +10,7 @@ import { IFVideoView } from 'src/types/index';
 import { Repository } from 'typeorm';
 import { TermEntity } from 'src/entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
-import { convertTimeToSeconds, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache } from 'src/helper';
+import { convertTimeToSeconds, generateKeyCache, parseNumber, promiseEmpty, validatedKeyCache, CACHE_TTL } from 'src/helper';
 import { PopularScoresEntity } from 'src/entities/popular_scores.entity';
 import { OpenSearchService } from '../open-search/opensearch.service';
 import { CommonService } from './../common/common.service';
@@ -249,7 +249,7 @@ export class VideoService {
         };
       });
     }
-    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { content, count }, expiresAt: Date.now() + CACHE_TTL });
     return {
       page_index: query.page,
       page_size: query.perPage,
@@ -405,7 +405,7 @@ export class VideoService {
     });
     this.cache.set(keyCache, {
       data: { result, studio, categories, views, actors, imagesMap, metaMap, attachmentDataMap },
-      expiresAt: Date.now() + 3 * 60 * 60 * 1000,
+      expiresAt: Date.now() + CACHE_TTL,
     });
     return {
       id: result?.id.toString(),

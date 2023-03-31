@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OptionsEntity } from 'src/entities/options.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CommonService } from '../common/common.service';
-import { generateKeyCache, parseNumber, validatedKeyCache } from '../../helper';
+import { generateKeyCache, parseNumber, validatedKeyCache, CACHE_TTL } from '../../helper';
 import { TermEntity } from './../../entities/term.entity';
 import { TermTaxonomyEntity } from 'src/entities/term_taxonomy.entity';
 import { TermRelationShipsBasicEntity } from './../../entities/term_relationships_basic.entity';
@@ -85,7 +85,7 @@ export class CategoryService {
     }));
     const B_not_in_A = arrCategoryAll.filter((itemB) => !categoryImage.some((itemA) => itemA.id === itemB.id));
     const content = categoryImage.concat(B_not_in_A);
-    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + 3 * 60 * 60 * 1000 });
+    this.cache.set(keyCache, { data: { content }, expiresAt: Date.now() + CACHE_TTL });
     return content;
   }
 }
