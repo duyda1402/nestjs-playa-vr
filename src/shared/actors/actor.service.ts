@@ -26,7 +26,7 @@ export class ActorService {
     private readonly termRelationShipsBasicRepository: Repository<TermRelationShipsBasicEntity>,
     private readonly openSearchService: OpenSearchService,
     private readonly commonService: CommonService
-  ) {}
+  ) { }
 
   async getActorList(query: QueryBody): Promise<IFPage<IFActorListView[]>> {
     const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
@@ -74,7 +74,7 @@ export class ActorService {
 
     const countPromise = actorQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-
+    console.log(data.map((item) => ({ popularity: item?.popularity, slug: item?.slug })));
     const imageIds = [];
     data.forEach((item) => {
       if (item.image_id && !isNaN(Number(item.image_id))) {
@@ -185,11 +185,11 @@ export class ActorService {
     const aliasGroupPromise = !aliasFields.length
       ? promiseEmpty()
       : this.termMetaRepository
-          .createQueryBuilder('tm')
-          .where('tm.termId = :termId', { termId: actor.id })
-          .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
-          .select(['tm.metaValue as value'])
-          .getRawMany();
+        .createQueryBuilder('tm')
+        .where('tm.termId = :termId', { termId: actor.id })
+        .andWhere('tm.metaKey IN(:...metaKeys)', { metaKeys: aliasFields })
+        .select(['tm.metaValue as value'])
+        .getRawMany();
     const countViewPromise = this.openSearchService.getTermViews(actor.id);
 
     const [imageMap, aliasItems, views] = await Promise.all([imagesPromise, aliasGroupPromise, countViewPromise]);
