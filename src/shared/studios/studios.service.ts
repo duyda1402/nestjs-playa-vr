@@ -26,7 +26,7 @@ export class StudiosService {
   ) {}
 
   async getStudioList(query: QueryBody): Promise<IFPage<IFStudioListView[]>> {
-    const direction = query.direction === 'desc' ? 'DESC' : 'ASC';
+    const direction = (query.direction || '').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     const order = query.order === 'popularity' ? 'popularity' : 'term.name';
 
     //Cache here: cache_key = `studio_list_data:${md5(queryObject)}`, cache_data = {content, count}
