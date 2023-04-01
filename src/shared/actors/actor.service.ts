@@ -48,7 +48,7 @@ export class ActorService {
     const actorQuery = this.termRepository
       .createQueryBuilder('term')
       .innerJoin(TermTaxonomyEntity, 'tt', 'tt.termId = term.id')
-      .innerJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'profile_image' })
+      .leftJoin(TermMetaEntity, 'tm', 'tm.termId = term.id AND tm.metaKey = :metaKey', { metaKey: 'profile_image' })
       .where('tt.taxonomy = :taxonomy', { taxonomy: 'porn_star_name' });
 
     if (query.title) {
@@ -81,7 +81,7 @@ export class ActorService {
 
     const countPromise = actorQuery.getCount();
     const [data, count] = await Promise.all([dataPromise, countPromise]);
-    console.log(data.map((item) => ({ popularity: item?.popularity, slug: item?.slug })));
+
     const imageIds = [];
     data.forEach((item) => {
       if (item.image_id && !isNaN(Number(item.image_id))) {
